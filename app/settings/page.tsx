@@ -11,9 +11,10 @@ import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Copy, Key, Globe, Webhook, RefreshCw, CheckCircle, AlertCircle } from "lucide-react"
+import { Copy, Key, Globe, Webhook, RefreshCw, CheckCircle, AlertCircle, Users } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 import { useToast } from "@/hooks/use-toast"
+import Link from "next/link"
 
 export default function SettingsPage() {
   const [apiKey, setApiKey] = useState("cms_live_sk_1234567890abcdef")
@@ -105,10 +106,11 @@ export default function SettingsPage() {
             </div>
 
             <Tabs defaultValue="api" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-4">
+              <TabsList className="grid w-full grid-cols-5">
                 <TabsTrigger value="api">API Integration</TabsTrigger>
                 <TabsTrigger value="webhook">Webhooks</TabsTrigger>
                 <TabsTrigger value="sync">Sinkronisasi</TabsTrigger>
+                <TabsTrigger value="users">Pengguna</TabsTrigger>
                 <TabsTrigger value="general">Umum</TabsTrigger>
               </TabsList>
 
@@ -329,6 +331,27 @@ export default function SettingsPage() {
                         ))}
                       </div>
                     </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="users" className="space-y-6">
+                <Card className="bg-card border-border">
+                  <CardHeader>
+                    <CardTitle className="flex items-center">
+                      <Users className="h-5 w-5 mr-2" />
+                      Manajemen Pengguna
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <p className="text-muted-foreground">
+                      Kelola pengguna, peran, dan hak akses untuk CMS Anda.
+                    </p>
+                    <Link href="/users">
+                      <Button variant="outline">
+                        Buka Manajemen Pengguna
+                      </Button>
+                    </Link>
                   </CardContent>
                 </Card>
               </TabsContent>

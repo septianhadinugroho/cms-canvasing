@@ -5,7 +5,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { LayoutDashboard, Package, Store, ImageIcon, Settings, ChevronLeft, ChevronRight, LogOut } from "lucide-react"
+import { LayoutDashboard, Package, Store, ImageIcon, Settings, ChevronLeft, ChevronRight, LogOut, Users } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 
 const navigation = [
@@ -13,6 +13,7 @@ const navigation = [
   { name: "Produk", href: "/products", icon: Package },
   { name: "Toko", href: "/stores", icon: Store },
   { name: "Media", href: "/media", icon: ImageIcon },
+  { name: "Pengguna", href: "/users", icon: Users },
   { name: "Pengaturan", href: "/settings", icon: Settings },
 ]
 
