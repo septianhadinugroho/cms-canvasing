@@ -1,28 +1,25 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Card, CardContent } from "@/components/ui/card"
-import { Upload, X } from "lucide-react"
-import Image from "next/image"
 import { useToast } from "@/hooks/use-toast"
 
+// Interface disesuaikan dengan skema DB baru
 interface Product {
   id: string
-  name: string
-  category: string
-  price: number
-  stock: number
-  store: string
-  status: "active" | "inactive" | "out-of-stock"
-  image: string
+  sku: string
+  barcode: string
+  product_name: string
+  slug: string
+  url_image: string
+  short_name: string
+  unit: string
   description: string
+  category_id: number
 }
 
 interface ProductFormProps {
@@ -33,25 +30,25 @@ interface ProductFormProps {
 
 export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
   const [formData, setFormData] = useState({
-    name: product?.name || "",
-    category: product?.category || "",
-    price: product?.price || 0,
-    stock: product?.stock || 0,
-    store: product?.store || "",
-    status: product?.status || "active",
+    product_name: product?.product_name || "",
+    sku: product?.sku || "",
+    barcode: product?.barcode || "",
+    slug: product?.slug || "",
+    url_image: product?.url_image || "",
+    short_name: product?.short_name || "",
+    unit: product?.unit || "",
     description: product?.description || "",
-    image: product?.image || "",
+    category_id: product?.category_id || 0,
   })
 
-  const [imagePreview, setImagePreview] = useState(product?.image || "")
   const { toast } = useToast()
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!formData.name || !formData.category || !formData.price || !formData.store) {
+    if (!formData.product_name || !formData.sku || !formData.unit) {
       toast({
         title: "Error",
-        description: "Mohon lengkapi semua field yang wajib diisi",
+        description: "Mohon lengkapi Nama Produk, SKU, dan Unit",
         variant: "destructive",
       })
       return
@@ -66,8 +63,6 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
       onSave(productData)
     }
 
-    console.log("Form submitted:", productData)
-
     toast({
       title: "Berhasil!",
       description: product ? "Produk berhasil diupdate" : "Produk berhasil ditambahkan",
@@ -76,164 +71,104 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
     onClose()
   }
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        const result = e.target?.result as string
-        setImagePreview(result)
-        setFormData((prev) => ({ ...prev, image: result }))
-      }
-      reader.readAsDataURL(file)
-
-      toast({
-        title: "Gambar berhasil diupload",
-        description: `File ${file.name} berhasil ditambahkan`,
-      })
-    }
-  }
-
-  const removeImage = () => {
-    setImagePreview("")
-    setFormData((prev) => ({ ...prev, image: "" }))
-    toast({
-      title: "Gambar dihapus",
-      description: "Gambar produk berhasil dihapus",
-    })
-  }
-
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Image Upload */}
-        <div className="space-y-2">
-          <Label htmlFor="image">Gambar Produk</Label>
-          <Card className="border-2 border-dashed border-border hover:border-primary/50 transition-colors">
-            <CardContent className="p-6 relative">
-              {imagePreview ? (
-                <div className="relative">
-                  <div className="relative h-32 w-full rounded-md overflow-hidden bg-muted">
-                    <Image src={imagePreview || "/placeholder.svg"} alt="Preview" fill className="object-cover" />
-                  </div>
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="sm"
-                    className="absolute -top-2 -right-2 h-6 w-6 p-0"
-                    onClick={removeImage}
-                  >
-                    <X className="h-3 w-3" />
-                  </Button>
-                </div>
-              ) : (
-                <div className="text-center">
-                  <Upload className="mx-auto h-8 w-8 text-muted-foreground mb-2" />
-                  <p className="text-sm text-muted-foreground mb-2">Klik untuk upload gambar</p>
-                  <p className="text-xs text-muted-foreground">PNG, JPG hingga 5MB</p>
-                </div>
-              )}
-              <input type="file" accept="image/*" onChange={handleImageUpload} className="sr-only" id="image-upload" />
-              <label htmlFor="image-upload" className="absolute inset-0 w-full h-full cursor-pointer" />
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Form Fields */}
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Nama Produk</Label>
+            <Label htmlFor="product_name">Nama Produk</Label>
             <Input
-              id="name"
-              value={formData.name}
-              onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
-              placeholder="Masukkan nama produk"
+              id="product_name"
+              value={formData.product_name}
+              onChange={(e) => setFormData((prev) => ({ ...prev, product_name: e.target.value }))}
+              placeholder="Contoh: Nike Air Max"
               className="bg-background border-border"
               required
             />
           </div>
-
           <div className="space-y-2">
-            <Label htmlFor="category">Kategori</Label>
-            <Select
-              value={formData.category}
-              onValueChange={(value) => setFormData((prev) => ({ ...prev, category: value }))}
-            >
-              <SelectTrigger className="bg-background border-border">
-                <SelectValue placeholder="Pilih kategori" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="sepatu">Sepatu</SelectItem>
-                <SelectItem value="tas">Tas</SelectItem>
-                <SelectItem value="jaket">Jaket</SelectItem>
-                <SelectItem value="aksesoris">Aksesoris</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label htmlFor="short_name">Nama Pendek</Label>
+            <Input
+              id="short_name"
+              value={formData.short_name}
+              onChange={(e) => setFormData((prev) => ({ ...prev, short_name: e.target.value }))}
+              placeholder="Contoh: Air Max"
+              className="bg-background border-border"
+            />
           </div>
+          <div className="space-y-2">
+            <Label htmlFor="slug">Slug</Label>
+            <Input
+              id="slug"
+              value={formData.slug}
+              onChange={(e) => setFormData((prev) => ({ ...prev, slug: e.target.value }))}
+              placeholder="contoh: nike-air-max"
+              className="bg-background border-border"
+            />
+          </div>
+        </div>
 
+        <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="price">Harga (Rp)</Label>
+              <Label htmlFor="sku">SKU</Label>
               <Input
-                id="price"
-                type="number"
-                value={formData.price}
-                onChange={(e) => setFormData((prev) => ({ ...prev, price: Number.parseInt(e.target.value) || 0 }))}
-                placeholder="0"
+                id="sku"
+                value={formData.sku}
+                onChange={(e) => setFormData((prev) => ({ ...prev, sku: e.target.value }))}
+                placeholder="NK-AM-001"
                 className="bg-background border-border"
                 required
               />
             </div>
-
             <div className="space-y-2">
-              <Label htmlFor="stock">Stok</Label>
+              <Label htmlFor="barcode">Barcode</Label>
               <Input
-                id="stock"
-                type="number"
-                value={formData.stock}
-                onChange={(e) => setFormData((prev) => ({ ...prev, stock: Number.parseInt(e.target.value) || 0 }))}
-                placeholder="0"
+                id="barcode"
+                value={formData.barcode}
+                onChange={(e) => setFormData((prev) => ({ ...prev, barcode: e.target.value }))}
+                placeholder="887229000123"
                 className="bg-background border-border"
-                required
               />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+                <Label htmlFor="unit">Unit</Label>
+                <Input
+                    id="unit"
+                    value={formData.unit}
+                    onChange={(e) => setFormData((prev) => ({...prev, unit: e.target.value}))}
+                    placeholder="Contoh: pasang, buah"
+                    className="bg-background border-border"
+                    required
+                />
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="category_id">ID Kategori</Label>
+                <Input
+                    id="category_id"
+                    type="number"
+                    value={formData.category_id}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, category_id: parseInt(e.target.value) || 0 }))}
+                    placeholder="1"
+                    className="bg-background border-border"
+                    required
+                />
             </div>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="store">Toko</Label>
-          <Select value={formData.store} onValueChange={(value) => setFormData((prev) => ({ ...prev, store: value }))}>
-            <SelectTrigger className="bg-background border-border">
-              <SelectValue placeholder="Pilih toko" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="jakarta">Jakarta Pusat</SelectItem>
-              <SelectItem value="bandung">Bandung</SelectItem>
-              <SelectItem value="surabaya">Surabaya</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="status">Status</Label>
-          <Select
-            value={formData.status}
-            onValueChange={(value: "active" | "inactive" | "out-of-stock") =>
-              setFormData((prev) => ({ ...prev, status: value }))
-            }
-          >
-            <SelectTrigger className="bg-background border-border">
-              <SelectValue placeholder="Pilih status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="active">Aktif</SelectItem>
-              <SelectItem value="inactive">Nonaktif</SelectItem>
-              <SelectItem value="out-of-stock">Habis</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+      <div className="space-y-2">
+        <Label htmlFor="url_image">URL Gambar</Label>
+        <Input
+          id="url_image"
+          value={formData.url_image}
+          onChange={(e) => setFormData((prev) => ({ ...prev, url_image: e.target.value }))}
+          placeholder="https://example.com/image.png"
+          className="bg-background border-border"
+        />
       </div>
 
       <div className="space-y-2">

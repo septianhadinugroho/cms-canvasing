@@ -7,15 +7,12 @@ import { ProductsTable } from "@/components/products-table"
 import { ProductForm } from "@/components/product-form"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Plus, Search } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 
 export default function ProductsPage() {
   const [searchTerm, setSearchTerm] = useState("")
-  const [categoryFilter, setCategoryFilter] = useState("all")
-  const [storeFilter, setStoreFilter] = useState("all")
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const { isAuthenticated } = useAuth()
 
@@ -33,7 +30,7 @@ export default function ProductsPage() {
             <div className="flex items-center justify-between mb-8">
               <div>
                 <h1 className="text-3xl font-semibold text-foreground mb-2">Manajemen Produk</h1>
-                <p className="text-muted-foreground">Kelola semua produk, harga, dan stok Anda</p>
+                <p className="text-muted-foreground">Kelola semua produk, SKU, dan inventaris Anda</p>
               </div>
 
               <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
@@ -53,47 +50,18 @@ export default function ProductsPage() {
             </div>
 
             <div className="bg-card border border-border rounded-lg p-4 mb-6">
-              <div className="flex flex-col sm:flex-row gap-4">
-                <div className="flex-1">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Cari produk..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10 bg-background border-border text-foreground placeholder:text-muted-foreground"
-                    />
-                  </div>
-                </div>
-
-                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                  <SelectTrigger className="w-full sm:w-48 bg-background border-border text-foreground">
-                    <SelectValue placeholder="Kategori" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Semua Kategori</SelectItem>
-                    <SelectItem value="sepatu">Sepatu</SelectItem>
-                    <SelectItem value="tas">Tas</SelectItem>
-                    <SelectItem value="jaket">Jaket</SelectItem>
-                    <SelectItem value="aksesoris">Aksesoris</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select value={storeFilter} onValueChange={setStoreFilter}>
-                  <SelectTrigger className="w-full sm:w-48 bg-background border-border text-foreground">
-                    <SelectValue placeholder="Toko" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Semua Toko</SelectItem>
-                    <SelectItem value="jakarta">Jakarta Pusat</SelectItem>
-                    <SelectItem value="bandung">Bandung</SelectItem>
-                    <SelectItem value="surabaya">Surabaya</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Cari produk berdasarkan nama, SKU, atau nama pendek..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 bg-background border-border text-foreground placeholder:text-muted-foreground"
+                />
               </div>
             </div>
 
-            <ProductsTable searchTerm={searchTerm} categoryFilter={categoryFilter} storeFilter={storeFilter} />
+            <ProductsTable searchTerm={searchTerm} />
           </div>
         </main>
       </div>

@@ -5,12 +5,24 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { LayoutDashboard, Package, Store, ImageIcon, Settings, ChevronLeft, ChevronRight, LogOut, Users } from "lucide-react"
+import {
+  LayoutDashboard,
+  Package,
+  Store,
+  ImageIcon,
+  Users,
+  Settings,
+  ChevronLeft,
+  ChevronRight,
+  LogOut,
+  Image as BannerIcon,
+} from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Produk", href: "/products", icon: Package },
+  { name: "Banner", href: "/banners", icon: BannerIcon },
   { name: "Toko", href: "/stores", icon: Store },
   { name: "Media", href: "/media", icon: ImageIcon },
   { name: "Pengguna", href: "/users", icon: Users },
@@ -26,7 +38,7 @@ export function Sidebar() {
     <div
       className={cn(
         "bg-sidebar border-r border-sidebar-border transition-all duration-300",
-        collapsed ? "w-16" : "w-64",
+        collapsed ? "w-16" : "w-64"
       )}
     >
       <div className="flex h-full flex-col">
@@ -54,7 +66,7 @@ export function Sidebar() {
                   isActive
                     ? "bg-sidebar-primary text-sidebar-primary-foreground"
                     : "text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent",
-                  collapsed && "justify-center",
+                  collapsed && "justify-center"
                 )}
               >
                 <item.icon className={cn("h-5 w-5", !collapsed && "mr-3")} />
@@ -77,7 +89,7 @@ export function Sidebar() {
             onClick={logout}
             className={cn(
               "w-full text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-              collapsed ? "h-8 w-8 p-0" : "justify-start",
+              collapsed ? "h-8 w-8 p-0" : "justify-start"
             )}
           >
             <LogOut className={cn("h-4 w-4", !collapsed && "mr-2")} />

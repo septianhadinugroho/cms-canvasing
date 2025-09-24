@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -10,6 +10,7 @@ import { Edit, Trash2, MoreHorizontal } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import Image from "next/image"
 import { useToast } from "@/hooks/use-toast"
+import { api } from "@/lib/api"
 
 interface User {
   id: string
@@ -21,36 +22,6 @@ interface User {
   avatar: string
 }
 
-const mockUsers: User[] = [
-  {
-    id: "1",
-    name: "Admin Utama",
-    email: "admin@canvasing.com",
-    role: "admin",
-    status: "active",
-    lastLogin: "2024-07-28T10:00:00Z",
-    avatar: "/placeholder-user.jpg",
-  },
-  {
-    id: "2",
-    name: "Editor Konten",
-    email: "editor@canvasing.com",
-    role: "editor",
-    status: "active",
-    lastLogin: "2024-07-28T12:30:00Z",
-    avatar: "/placeholder-user.jpg",
-  },
-  {
-    id: "3",
-    name: "Pengguna Viewer",
-    email: "viewer@canvasing.com",
-    role: "viewer",
-    status: "inactive",
-    lastLogin: "2024-07-27T15:00:00Z",
-    avatar: "/placeholder-user.jpg",
-  },
-]
-
 interface UsersTableProps {
   searchTerm: string
   roleFilter: string
@@ -60,18 +31,31 @@ interface UsersTableProps {
 export function UsersTable({ searchTerm, roleFilter, statusFilter }: UsersTableProps) {
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [users, setUsers] = useState<User[]>(mockUsers)
+  const [users, setUsers] = useState<User[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   const { toast } = useToast()
 
-  const filteredUsers = users.filter((user) => {
-    const matchesSearch =
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesRole = roleFilter === "all" || user.role === roleFilter
-    const matchesStatus = statusFilter === "all" || user.status === statusFilter
-
-    return matchesSearch && matchesRole && matchesStatus
-  })
+  useEffect(() => {
+    const fetchUsers = async () => {
+        setIsLoading(true);
+        try {
+            // Nanti query params bisa ditambahkan di sini
+            const fetchedUsers = await api.get<User[]>('/users');
+            // Logika filter sementara di frontend
+            const filtered = fetchedUsers.filter(user => 
+                (user.name.toLowerCase().includes(searchTerm.toLowerCase()) || user.email.toLowerCase().includes(searchTerm.toLowerCase())) &&
+                (roleFilter === 'all' || user.role === roleFilter) &&
+                (statusFilter === 'all' || user.status === statusFilter)
+            );
+            setUsers(filtered);
+        } catch (error) {
+            toast({ title: "Error", description: "Gagal memuat data pengguna.", variant: "destructive" });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    fetchUsers();
+  }, [searchTerm, roleFilter, statusFilter, toast]);
 
   const getStatusBadge = (status: string) => {
     if (status === "active") {
@@ -98,6 +82,8 @@ export function UsersTable({ searchTerm, roleFilter, statusFilter }: UsersTableP
   const handleUserUpdate = (updatedUser: User) => {
     setUsers((prev) => prev.map((u) => (u.id === updatedUser.id ? updatedUser : u)))
   }
+  
+  if (isLoading) return <div className="text-center py-12">Memuat data pengguna...</div>;
 
   return (
     <>
@@ -113,7 +99,7 @@ export function UsersTable({ searchTerm, roleFilter, statusFilter }: UsersTableP
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredUsers.map((user) => (
+            {users.map((user) => (
               <TableRow key={user.id} className="border-border hover:bg-muted/50">
                 <TableCell>
                   <div className="flex items-center space-x-3">
@@ -164,7 +150,7 @@ export function UsersTable({ searchTerm, roleFilter, statusFilter }: UsersTableP
           </TableBody>
         </Table>
 
-        {filteredUsers.length === 0 && (
+        {users.length === 0 && !isLoading && (
           <div className="text-center py-12">
             <p className="text-muted-foreground">Tidak ada pengguna yang ditemukan</p>
           </div>
