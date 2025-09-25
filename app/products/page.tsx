@@ -14,11 +14,14 @@ import { useAuth } from "@/components/auth-provider"
 export default function ProductsPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth()
 
   if (!isAuthenticated) {
     return null
   }
+
+  // Ambil store_code dari user yang login
+  const storeCode = user?.store_code;
 
   return (
     <div className="flex h-screen bg-background">
@@ -53,7 +56,7 @@ export default function ProductsPage() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Cari produk berdasarkan nama, SKU, atau nama pendek..."
+                  placeholder="Cari produk berdasarkan nama..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 bg-background border-border text-foreground placeholder:text-muted-foreground"
@@ -61,7 +64,13 @@ export default function ProductsPage() {
               </div>
             </div>
 
-            <ProductsTable searchTerm={searchTerm} />
+            {storeCode ? (
+              <ProductsTable searchTerm={searchTerm} storeCode={storeCode} />
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">Kode toko tidak ditemukan untuk pengguna ini.</p>
+              </div>
+            )}
           </div>
         </main>
       </div>

@@ -1,14 +1,19 @@
 "use client"
 
 import type React from "react"
-
 import { createContext, useContext, useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
 
+// Bentuk data user disesuaikan dengan response API
+interface User {
+  name: string
+  store_code: string
+}
+
 interface AuthContextType {
   isAuthenticated: boolean
-  userEmail: string | null
-  login: (email: string) => void
+  user: User | null
+  login: (token: string, userData: User) => void
   logout: () => void
 }
 
@@ -16,22 +21,23 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [userEmail, setUserEmail] = useState<string | null>(null)
+  const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
   const pathname = usePathname()
 
   useEffect(() => {
     const checkAuth = () => {
-      const authStatus = localStorage.getItem("isAuthenticated")
-      const email = localStorage.getItem("userEmail")
+      // Kita cek keberadaan token
+      const token = localStorage.getItem("accessToken")
+      const userData = localStorage.getItem("userData")
 
-      if (authStatus === "true" && email) {
+      if (token && userData) {
         setIsAuthenticated(true)
-        setUserEmail(email)
+        setUser(JSON.parse(userData))
       } else {
         setIsAuthenticated(false)
-        setUserEmail(null)
+        setUser(null)
         if (pathname !== "/login") {
           router.push("/login")
         }
@@ -42,18 +48,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     checkAuth()
   }, [router, pathname])
 
-  const login = (email: string) => {
-    localStorage.setItem("isAuthenticated", "true")
-    localStorage.setItem("userEmail", email)
+  const login = (token: string, userData: User) => {
+    // Simpan token dan data user ke localStorage
+    localStorage.setItem("accessToken", token)
+    localStorage.setItem("userData", JSON.stringify(userData))
     setIsAuthenticated(true)
-    setUserEmail(email)
+    setUser(userData)
+    router.push("/") // Arahkan ke dashboard setelah login
   }
 
   const logout = () => {
-    localStorage.removeItem("isAuthenticated")
-    localStorage.removeItem("userEmail")
+    localStorage.removeItem("accessToken")
+    localStorage.removeItem("userData")
     setIsAuthenticated(false)
-    setUserEmail(null)
+    setUser(null)
     router.push("/login")
   }
 
@@ -69,7 +77,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return null
   }
 
-  return <AuthContext.Provider value={{ isAuthenticated, userEmail, login, logout }}>{children}</AuthContext.Provider>
+  return <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {

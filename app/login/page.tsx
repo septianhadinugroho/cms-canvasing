@@ -1,35 +1,66 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Eye, EyeOff, LogIn } from "lucide-react"
+import { useAuth } from "@/components/auth-provider"
+import { useToast } from "@/hooks/use-toast"
+import { api } from "@/lib/api"
+
+// Definisikan tipe data user dan response sesuai backend
+interface User {
+  name: string
+  store_code: string
+}
+
+interface LoginResponse {
+  user: User
+  token: {
+    token_access: string
+    token_refresh: string
+  }
+}
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("")
+  const [username, setUsername] = useState("") // Diubah menjadi username
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
+  const auth = useAuth()
+  const { toast } = useToast()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
 
-    // Simulate login process
-    setTimeout(() => {
-      if (email && password) {
-        localStorage.setItem("isAuthenticated", "true")
-        localStorage.setItem("userEmail", email)
-        router.push("/")
+    try {
+      // Panggil API login dari backend
+      const response = await api.post<LoginResponse>("/auth/login", {
+        username, // Key disesuaikan menjadi 'username'
+        password,
+      })
+      
+      if (response.token && response.user) {
+        // Panggil fungsi login dari AuthContext dengan data dari backend
+        auth.login(response.token.token_access, response.user)
+        toast({
+          title: "Login Berhasil!",
+          description: `Selamat datang kembali, ${response.user.name}.`,
+        })
       }
+    } catch (error: any) {
+      toast({
+        title: "Login Gagal",
+        description: error.message || "Username atau password salah.",
+        variant: "destructive",
+      })
+    } finally {
       setIsLoading(false)
-    }, 1000)
+    }
   }
 
   return (
@@ -44,15 +75,15 @@ export default function LoginPage() {
         <CardContent>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-foreground">
-                Email
+              <Label htmlFor="username" className="text-foreground">
+                Username
               </Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="admin@canvasing.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="username"
+                type="text" // Type text untuk username
+                placeholder="Masukkan username Anda"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 required
                 className="bg-background border-border text-foreground"
               />
@@ -78,11 +109,7 @@ export default function LoginPage() {
                   className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                   onClick={() => setShowPassword(!showPassword)}
                 >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4 text-muted-foreground" />
-                  ) : (
-                    <Eye className="h-4 w-4 text-muted-foreground" />
-                  )}
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </Button>
               </div>
             </div>
