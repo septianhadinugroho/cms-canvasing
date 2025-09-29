@@ -12,7 +12,8 @@ import { useToast } from "@/hooks/use-toast"
 import { api } from "@/lib/api"
 import type { Banner } from "@/types"
 
-export function BannersTable() {
+// Menerima `key` sebagai prop untuk mekanisme refresh
+export function BannersTable({ key: refreshKey }: { key: number }) {
   const [editingBanner, setEditingBanner] = useState<Banner | null>(null)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [banners, setBanners] = useState<Banner[]>([])
@@ -31,9 +32,10 @@ export function BannersTable() {
     }
   }, [toast]);
 
+  // useEffect sekarang bergantung pada `refreshKey`
   useEffect(() => {
     fetchBanners();
-  }, [fetchBanners]);
+  }, [fetchBanners, refreshKey]);
 
   const handleEdit = (banner: Banner) => {
     setEditingBanner(banner);
@@ -45,7 +47,7 @@ export function BannersTable() {
         try {
             await api.delete(`/banners/${bannerId}`);
             toast({ title: "Success!", description: `Banner successfully deleted.` });
-            fetchBanners();
+            fetchBanners(); // Langsung fetch ulang data setelah hapus
         } catch(error: any) {
             toast({ title: "Failed", description: error.message, variant: "destructive"});
         }

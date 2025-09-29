@@ -12,16 +12,17 @@ import { useAuth } from "@/components/auth-provider"
 
 export default function BannersPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-  const [refreshKey, setRefreshKey] = useState(0)
+  const [refreshKey, setRefreshKey] = useState(0) // State untuk memicu refresh
   const { isAuthenticated } = useAuth()
     
   if (!isAuthenticated) {
     return null
   }
 
+  // Fungsi ini akan dipanggil setelah banner baru berhasil disimpan
   const handleSave = () => {
     setIsAddDialogOpen(false)
-    setRefreshKey(prevKey => prevKey + 1)
+    setRefreshKey(prevKey => prevKey + 1) // Mengubah key untuk me-refresh BannersTable
   }
 
   return (
@@ -56,6 +57,7 @@ export default function BannersPage() {
               </Dialog>
             </div>
             
+            {/* Menggunakan `key` untuk memaksa re-render dan fetch data baru */}
             <BannersTable key={refreshKey} />
 
           </div>
