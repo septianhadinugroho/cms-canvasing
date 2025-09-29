@@ -33,3 +33,15 @@ export interface Store {
   created_at?: string;
   updated_at?: string;
 }
+
+// Tipe Banner disesuaikan
+export interface Banner {
+  id: number;
+  image_url: string;
+  status: number; // 0 untuk nonaktif, 1 untuk aktif
+  created_at?: string;
+  updated_at?: string;
+}
+
+// Tipe data untuk form
+export type BannerFormData = Omit<Banner, 'id' | 'created_at' | 'updated_at'>;

@@ -1,88 +1,109 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import { Trash2 } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { BannerForm } from "./banner-form"
+import { Edit, Trash2 } from "lucide-react"
 import Image from "next/image"
 import { useToast } from "@/hooks/use-toast"
 import { api } from "@/lib/api"
-import type { BannerImages } from "@/types" // <-- Impor tipe baru
+import type { Banner } from "@/types"
 
 export function BannersTable() {
-  const [bannerUrls, setBannerUrls] = useState<BannerImages>([])
+  const [editingBanner, setEditingBanner] = useState<Banner | null>(null)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [banners, setBanners] = useState<Banner[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const { toast } = useToast()
-  
-  useEffect(() => {
-    const fetchBanners = async () => {
-        setIsLoading(true);
-        try {
-            // Panggil endpoint /banners/active
-            const data = await api.get<BannerImages>('/banners/active');
-            setBannerUrls(data);
-        } catch (error: any) {
-            toast({ title: "Error", description: error.message || "Gagal memuat data banner.", variant: "destructive" });
-        } finally {
-            setIsLoading(false);
-        }
-    };
-    fetchBanners();
+
+  const fetchBanners = useCallback(async () => {
+    setIsLoading(true);
+    try {
+        // Asumsi endpoint ini mengembalikan array of banner objects, bukan hanya URL
+        const data = await api.get<Banner[]>('/banners/active');
+        setBanners(data);
+    } catch (error: any) {
+        toast({ title: "Error", description: error.message, variant: "destructive" });
+    } finally {
+        setIsLoading(false);
+    }
   }, [toast]);
 
-  const handleDelete = (urlToDelete: string) => {
+  useEffect(() => {
+    fetchBanners();
+  }, [fetchBanners]);
+
+  const handleEdit = (banner: Banner) => {
+    setEditingBanner(banner);
+    setIsEditDialogOpen(true);
+  }
+
+  const handleDelete = async (bannerId: number) => {
     if (window.confirm(`Yakin ingin menghapus banner ini?`)) {
-        // Logika untuk menghapus banner (membutuhkan API DELETE by URL atau ID)
-        // Untuk sementara, kita hanya hapus dari state
-        setBannerUrls(prev => prev.filter(url => url !== urlToDelete));
-        toast({ title: "Berhasil!", description: `Banner berhasil dihapus.` });
+        try {
+            await api.delete(`/banners/${bannerId}`);
+            toast({ title: "Berhasil!", description: `Banner berhasil dihapus.` });
+            fetchBanners(); // Refresh data
+        } catch(error: any) {
+            toast({ title: "Gagal", description: error.message, variant: "destructive"});
+        }
     }
   }
   
   if (isLoading) return <div className="text-center py-12">Memuat data banner...</div>;
 
   return (
-    <div className="bg-card border border-border rounded-lg overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow className="border-border">
-            <TableHead className="text-muted-foreground">Preview Gambar</TableHead>
-            <TableHead className="text-muted-foreground">URL</TableHead>
-            <TableHead className="text-muted-foreground w-12 text-right">Aksi</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {bannerUrls.map((url, index) => (
-            <TableRow key={index} className="border-border hover:bg-muted/50">
-              <TableCell>
-                <div className="relative h-20 w-40 rounded-md overflow-hidden bg-muted">
-                  <Image
-                    src={url}
-                    alt={`Banner ${index + 1}`}
-                    fill
-                    className="object-cover"
-                    onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg' }}
-                  />
-                </div>
-              </TableCell>
-              <TableCell className="max-w-xs">
-                <p className="font-mono text-sm text-foreground truncate">{url}</p>
-              </TableCell>
-              <TableCell className="text-right">
-                <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(url)}>
-                    <Trash2 className="h-4 w-4" />
-                </Button>
-              </TableCell>
+    <>
+      <div className="bg-card border border-border rounded-lg overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Gambar</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Aksi</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-      
-      {bannerUrls.length === 0 && !isLoading && (
-        <div className="text-center py-12">
-          <p className="text-muted-foreground">Tidak ada banner aktif yang ditemukan.</p>
-        </div>
-      )}
-    </div>
+          </TableHeader>
+          <TableBody>
+            {banners.map((banner) => (
+              <TableRow key={banner.id}>
+                <TableCell>
+                  <div className="relative h-20 w-40 rounded-md overflow-hidden bg-muted">
+                    <Image src={banner.image_url} alt={`Banner ${banner.id}`} fill className="object-cover" onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg' }} />
+                  </div>
+                </TableCell>
+                <TableCell><Badge variant={banner.status === 1 ? "default" : "secondary"}>{banner.status === 1 ? 'Aktif' : 'Nonaktif'}</Badge></TableCell>
+                <TableCell className="text-right">
+                  <div className="flex items-center justify-end space-x-2">
+                    <Button variant="ghost" size="icon" onClick={() => handleEdit(banner)}>
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" className="text-destructive" onClick={() => handleDelete(banner.id)}>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+        {banners.length === 0 && !isLoading && (
+          <div className="text-center py-12"><p className="text-muted-foreground">Tidak ada banner ditemukan.</p></div>
+        )}
+      </div>
+
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader><DialogTitle>Edit Banner</DialogTitle></DialogHeader>
+          <BannerForm
+            banner={editingBanner!}
+            onClose={() => setIsEditDialogOpen(false)}
+            onSave={fetchBanners}
+          />
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

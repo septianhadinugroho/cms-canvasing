@@ -58,7 +58,7 @@ export const api = {
     if (!API_BASE_URL) throw new Error("NEXT_PUBLIC_API_BASE_URL is not defined");
 
     // Daftarkan /stores sebagai endpoint yang sudah siap
-    const realApiEndpoints = ["/products", "/banners/active", "/stores"];
+    const realApiEndpoints = ["/products", "/banners", "/stores"];
     
     let response: any;
     
@@ -73,10 +73,8 @@ export const api = {
         }
         response = await fetch(url.toString(), { headers: getAuthHeaders() });
     } else {
-      // Endpoint lain masih pakai dummy
       response = await fetchDummyData(endpoint);
     }
-
     return handleApiResponse(response);
   },
 
@@ -89,6 +87,27 @@ export const api = {
         body: JSON.stringify(body),
     });
 
+    return handleApiResponse(response);
+  },
+
+  // Method baru untuk update
+  put: async <T>(endpoint: string, body: unknown): Promise<T> => {
+    if (!API_BASE_URL) throw new Error("NEXT_PUBLIC_API_BASE_URL is not defined");
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        method: 'PUT',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(body),
+    });
+    return handleApiResponse(response);
+  },
+
+  // Method baru untuk delete
+  delete: async <T>(endpoint: string): Promise<T> => {
+    if (!API_BASE_URL) throw new Error("NEXT_PUBLIC_API_BASE_URL is not defined");
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        method: 'DELETE',
+        headers: getAuthHeaders(),
+    });
     return handleApiResponse(response);
   },
 };
