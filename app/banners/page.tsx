@@ -12,18 +12,16 @@ import { useAuth } from "@/components/auth-provider"
 
 export default function BannersPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0)
   const { isAuthenticated } = useAuth()
     
-  // Mock onSave function for adding new banner
-  const handleSaveNewBanner = (banner: any) => {
-    console.log("New banner to be added:", banner);
-    // Here you would typically call an API to add the banner
-    // and then refresh the banner list in BannersTable.
-    // For now, this is a placeholder.
-  };
-
   if (!isAuthenticated) {
     return null
+  }
+
+  const handleSave = () => {
+    setIsAddDialogOpen(false)
+    setRefreshKey(prevKey => prevKey + 1)
   }
 
   return (
@@ -35,30 +33,30 @@ export default function BannersPage() {
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h1 className="text-3xl font-semibold text-foreground mb-2">Manajemen Banner</h1>
-                <p className="text-muted-foreground">Kelola semua banner promosi untuk website Anda</p>
+                <h1 className="text-3xl font-semibold text-foreground mb-2">Banner Management</h1>
+                <p className="text-muted-foreground">Manage all promotional banners for your website</p>
               </div>
 
               <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                 <DialogTrigger asChild>
                   <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
                     <Plus className="h-4 w-4 mr-2" />
-                    Tambah Banner
+                    Add Banner
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-lg">
                   <DialogHeader>
-                    <DialogTitle className="text-foreground">Tambah Banner Baru</DialogTitle>
+                    <DialogTitle className="text-foreground">Add New Banner</DialogTitle>
                   </DialogHeader>
                   <BannerForm 
                     onClose={() => setIsAddDialogOpen(false)}
-                    onSave={handleSaveNewBanner}
+                    onSave={handleSave}
                   />
                 </DialogContent>
               </Dialog>
             </div>
             
-            <BannersTable />
+            <BannersTable key={refreshKey} />
 
           </div>
         </main>

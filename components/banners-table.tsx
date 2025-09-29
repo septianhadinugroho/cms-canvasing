@@ -22,7 +22,6 @@ export function BannersTable() {
   const fetchBanners = useCallback(async () => {
     setIsLoading(true);
     try {
-        // Asumsi endpoint ini mengembalikan array of banner objects, bukan hanya URL
         const data = await api.get<Banner[]>('/banners/active');
         setBanners(data);
     } catch (error: any) {
@@ -42,18 +41,18 @@ export function BannersTable() {
   }
 
   const handleDelete = async (bannerId: number) => {
-    if (window.confirm(`Yakin ingin menghapus banner ini?`)) {
+    if (window.confirm(`Are you sure you want to delete this banner?`)) {
         try {
             await api.delete(`/banners/${bannerId}`);
-            toast({ title: "Berhasil!", description: `Banner berhasil dihapus.` });
-            fetchBanners(); // Refresh data
+            toast({ title: "Success!", description: `Banner successfully deleted.` });
+            fetchBanners();
         } catch(error: any) {
-            toast({ title: "Gagal", description: error.message, variant: "destructive"});
+            toast({ title: "Failed", description: error.message, variant: "destructive"});
         }
     }
   }
   
-  if (isLoading) return <div className="text-center py-12">Memuat data banner...</div>;
+  if (isLoading) return <div className="text-center py-12">Loading banners...</div>;
 
   return (
     <>
@@ -61,9 +60,9 @@ export function BannersTable() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Gambar</TableHead>
+              <TableHead>Image</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="text-right">Aksi</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -71,10 +70,20 @@ export function BannersTable() {
               <TableRow key={banner.id}>
                 <TableCell>
                   <div className="relative h-20 w-40 rounded-md overflow-hidden bg-muted">
-                    <Image src={banner.image_url} alt={`Banner ${banner.id}`} fill className="object-cover" onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg' }} />
+                    <Image 
+                      src={banner.image_url} 
+                      alt={`Banner ${banner.id}`} 
+                      fill 
+                      className="object-cover" 
+                      onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg' }} 
+                    />
                   </div>
                 </TableCell>
-                <TableCell><Badge variant={banner.status === 1 ? "default" : "secondary"}>{banner.status === 1 ? 'Aktif' : 'Nonaktif'}</Badge></TableCell>
+                <TableCell>
+                  <Badge variant={banner.status === 1 ? "default" : "secondary"}>
+                    {banner.status === 1 ? 'Active' : 'Inactive'}
+                  </Badge>
+                </TableCell>
                 <TableCell className="text-right">
                   <div className="flex items-center justify-end space-x-2">
                     <Button variant="ghost" size="icon" onClick={() => handleEdit(banner)}>
@@ -90,18 +99,25 @@ export function BannersTable() {
           </TableBody>
         </Table>
         {banners.length === 0 && !isLoading && (
-          <div className="text-center py-12"><p className="text-muted-foreground">Tidak ada banner ditemukan.</p></div>
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">No active banners found.</p>
+          </div>
         )}
       </div>
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader><DialogTitle>Edit Banner</DialogTitle></DialogHeader>
-          <BannerForm
-            banner={editingBanner!}
-            onClose={() => setIsEditDialogOpen(false)}
-            onSave={fetchBanners}
-          />
+          {editingBanner && (
+            <BannerForm
+              banner={editingBanner}
+              onClose={() => setIsEditDialogOpen(false)}
+              onSave={() => {
+                setIsEditDialogOpen(false);
+                fetchBanners();
+              }}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </>
