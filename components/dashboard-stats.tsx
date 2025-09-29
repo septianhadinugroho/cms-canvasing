@@ -1,34 +1,76 @@
+"use client"
+
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Package, Store, TrendingUp, DollarSign } from "lucide-react"
+import { api } from "@/lib/api"
+import { useAuth } from "./auth-provider"
+import type { Product, Store as StoreType } from "@/types"
 
-const stats = [
-  {
-    title: "Total Produk",
-    value: "1,234",
-    change: "+12%",
-    icon: Package,
-  },
-  {
-    title: "Toko Aktif",
-    value: "23",
-    change: "+3%",
-    icon: Store,
-  },
-  {
-    title: "Penjualan Bulan Ini",
-    value: "Rp 45.2M",
-    change: "+18%",
-    icon: TrendingUp,
-  },
-  {
-    title: "Rata-rata Harga",
-    value: "Rp 125K",
-    change: "+5%",
-    icon: DollarSign,
-  },
-]
+interface ProductApiResponse {
+  items: Product[]
+  pagination: { totalData: number }
+}
 
 export function DashboardStats() {
+  const [totalProducts, setTotalProducts] = useState<number | string>("...")
+  const [activeStores, setActiveStores] = useState<number | string>("...")
+  const { user } = useAuth()
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      if (!user?.store_code) {
+          setTotalProducts(0);
+          setActiveStores(0);
+          return;
+      };
+
+      try {
+        const [productsResponse, storesResponse] = await Promise.all([
+          api.get<ProductApiResponse>('/products', { storeCode: user.store_code, limit: 1 }),
+          api.get<StoreType[]>('/stores')
+        ]);
+        
+        setTotalProducts(productsResponse.pagination.totalData);
+        setActiveStores(storesResponse.length);
+
+      } catch (error) {
+        console.error("Gagal mengambil data statistik dashboard:", error);
+        setTotalProducts("Error");
+        setActiveStores("Error");
+      }
+    };
+
+    fetchStats();
+  }, [user]);
+
+  const stats = [
+    {
+      title: "Total Produk",
+      value: totalProducts,
+      change: "", 
+      icon: Package,
+    },
+    {
+      title: "Toko Aktif",
+      value: activeStores,
+      change: "", 
+      icon: Store,
+    },
+    {
+      title: "Penjualan Bulan Ini",
+      value: "Rp 0",
+      change: "N/A",
+      icon: TrendingUp,
+    },
+    {
+      title: "Rata-rata Harga",
+      value: "Rp 0",
+      change: "N/A",
+      icon: DollarSign,
+    },
+  ];
+
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
       {stats.map((stat) => (
@@ -39,7 +81,9 @@ export function DashboardStats() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-card-foreground">{stat.value}</div>
-            <p className="text-xs text-green-500 mt-1">{stat.change} dari bulan lalu</p>
+            {stat.change && (
+                <p className="text-xs text-muted-foreground mt-1">{stat.change}</p>
+            )}
           </CardContent>
         </Card>
       ))}

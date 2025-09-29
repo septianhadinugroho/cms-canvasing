@@ -6,14 +6,15 @@ export interface Product {
   barcode: string;
   product_name: string;
   slug: string;
-  url_image: string;
+  url_image: string; // Ini akan menjadi string JSON
   short_name: string;
   unit: string;
   description: string;
-  category_id: number;
+  category_id: string; // Diubah jadi string untuk input
   name_category: string;
   stock: number;
   price: number;
+  store_id: string; // Ditambahkan
 }
 
 export type ProductFormData = Omit<Product, 'id' | 'name_category' | 'stock' | 'price'>;

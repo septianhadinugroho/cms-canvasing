@@ -14,14 +14,18 @@ import { useAuth } from "@/components/auth-provider"
 export default function ProductsPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0); // State untuk refresh
   const { isAuthenticated, user } = useAuth()
 
   if (!isAuthenticated) {
     return null
   }
 
-  // Ambil store_code dari user yang login
   const storeCode = user?.store_code;
+  
+  const handleSave = () => {
+    setRefreshKey(prevKey => prevKey + 1); // Trigger refresh pada tabel
+  };
 
   return (
     <div className="flex h-screen bg-background">
@@ -43,11 +47,14 @@ export default function ProductsPage() {
                     Tambah Produk
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-2xl">
+                <DialogContent className="max-w-3xl">
                   <DialogHeader>
                     <DialogTitle className="text-foreground">Tambah Produk Baru</DialogTitle>
                   </DialogHeader>
-                  <ProductForm onClose={() => setIsAddDialogOpen(false)} />
+                  <ProductForm 
+                    onClose={() => setIsAddDialogOpen(false)} 
+                    onSave={handleSave}
+                  />
                 </DialogContent>
               </Dialog>
             </div>
@@ -65,7 +72,11 @@ export default function ProductsPage() {
             </div>
 
             {storeCode ? (
-              <ProductsTable searchTerm={searchTerm} storeCode={storeCode} />
+              <ProductsTable 
+                key={refreshKey} // Gunakan key untuk re-render
+                searchTerm={searchTerm} 
+                storeCode={storeCode} 
+              />
             ) : (
               <div className="text-center py-12">
                 <p className="text-muted-foreground">Kode toko tidak ditemukan untuk pengguna ini.</p>
