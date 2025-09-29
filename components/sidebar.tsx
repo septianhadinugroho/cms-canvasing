@@ -21,18 +21,15 @@ import { useAuth } from "@/components/auth-provider"
 
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
-  { name: "Produk", href: "/products", icon: Package },
+  { name: "Products", href: "/products", icon: Package },
   { name: "Banners", href: "/banners", icon: BannerIcon },
   { name: "Stores", href: "/stores", icon: Store },
-  { name: "Media", href: "/media", icon: ImageIcon },
-  { name: "Pengguna", href: "/users", icon: Users },
-  { name: "Pengaturan", href: "/settings", icon: Settings },
 ]
 
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false)
   const pathname = usePathname()
-  const { logout, user } = useAuth() // Diubah dari userEmail menjadi user
+  const { logout, user } = useAuth()
 
   return (
     <div
@@ -42,7 +39,6 @@ export function Sidebar() {
       )}
     >
       <div className="flex h-full flex-col">
-        {/* ... bagian atas sidebar tetap sama ... */}
         <div className="flex h-16 items-center justify-between px-4 border-b border-sidebar-border">
           {!collapsed && <h2 className="text-lg font-semibold text-sidebar-foreground">Canvasing CMS</h2>}
           <Button
@@ -68,8 +64,7 @@ export function Sidebar() {
         <div className="p-4 border-t border-sidebar-border">
           {!collapsed && (
             <div className="mb-3">
-              <p className="text-xs text-sidebar-foreground/70">Masuk sebagai:</p>
-              {/* Menampilkan nama user */}
+              <p className="text-xs text-sidebar-foreground/70">Logged in as:</p>
               <p className="text-sm font-medium text-sidebar-foreground truncate">{user?.name || "User"}</p>
             </div>
           )}
@@ -83,7 +78,7 @@ export function Sidebar() {
             )}
           >
             <LogOut className={cn("h-4 w-4", !collapsed && "mr-2")} />
-            {!collapsed && "Keluar"}
+            {!collapsed && "Logout"}
           </Button>
         </div>
       </div>
