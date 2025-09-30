@@ -28,7 +28,7 @@ export function DashboardStats() {
       try {
         const [productsResponse, storesResponse] = await Promise.all([
           api.get<ProductApiResponse>('/products', { storeCode: user.store_code, limit: 1 }),
-          api.get<StoreType[]>('/stores')
+          api.get<StoreType[]>('/stores/all')
         ]);
         
         setTotalProducts(productsResponse.pagination.totalData);

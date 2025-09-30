@@ -6,13 +6,12 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { useToast } from "@/hooks/use-toast"
-import type { Store } from "@/types" // <-- Impor tipe baru
+import type { Store } from "@/types"
 
 interface StoreFormProps {
   store?: Store
   onClose: () => void
-  onSave?: (storeData: Partial<Store>) => void
+  onSave: (storeData: Partial<Store>) => Promise<void> // Diubah untuk menandakan ini adalah proses async
 }
 
 export function StoreForm({ store, onClose, onSave }: StoreFormProps) {
@@ -25,19 +24,12 @@ export function StoreForm({ store, onClose, onSave }: StoreFormProps) {
     mid: store?.mid || "",
     tid: store?.tid || "",
   })
+  const [isSaving, setIsSaving] = useState(false); // State untuk loading
 
-  const { toast } = useToast()
-
-  const handleSubmit = (e: React.FormEvent) => {
+  // Jadikan fungsi ini async
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!formData.store_name || !formData.store_code) {
-      toast({
-        title: "Error",
-        description: "Store Name and Store Code are required.",
-        variant: "destructive",
-      })
-      return
-    }
+    setIsSaving(true); // Mulai loading
 
     const storeDataToSave: Partial<Store> = {
       id: store?.id,
@@ -46,20 +38,15 @@ export function StoreForm({ store, onClose, onSave }: StoreFormProps) {
       longitude: parseFloat(String(formData.longitude)) || 0,
     };
     
-    if (onSave) {
-      onSave(storeDataToSave)
-    }
-
-    toast({
-      title: "Success!",
-      description: store ? "Store successfully updated" : "Store successfully added",
-    })
-
-    onClose()
+    // Tunggu proses onSave selesai
+    await onSave(storeDataToSave);
+    
+    setIsSaving(false); // Hentikan loading
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+        {/* ... (kode form lainnya tidak berubah) ... */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
                 <Label htmlFor="store_name">Store Name</Label>
@@ -99,11 +86,11 @@ export function StoreForm({ store, onClose, onSave }: StoreFormProps) {
         </div>
 
       <div className="flex justify-end space-x-4 pt-4">
-        <Button type="button" variant="outline" onClick={onClose}>
+        <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>
           Cancel
         </Button>
-        <Button type="submit" className="bg-primary text-primary-foreground hover:bg-primary/90">
-          {store ? "Update Store" : "Add Store"}
+        <Button type="submit" className="bg-primary text-primary-foreground hover:bg-primary/90" disabled={isSaving}>
+          {isSaving ? "Saving..." : (store ? "Update Store" : "Add Store")}
         </Button>
       </div>
     </form>

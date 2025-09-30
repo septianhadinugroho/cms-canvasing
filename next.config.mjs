@@ -14,22 +14,15 @@ const nextConfig = {
         port: '',
         pathname: '**',
       },
-      // Konfigurasi untuk Google Drive
       {
         protocol: 'https',
         hostname: 'drive.google.com',
         port: '',
         pathname: '**',
       },
-       {
-        protocol: 'https',
-        hostname: 'lh3.googleusercontent.com',
-        port: '',
-        pathname: '**',
-      },
       {
         protocol: 'https',
-        hostname: 'example.com',
+        hostname: 'lh3.googleusercontent.com',
         port: '',
         pathname: '**',
       }

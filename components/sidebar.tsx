@@ -8,10 +8,7 @@ import { Button } from "@/components/ui/button"
 import {
   LayoutDashboard,
   Package,
-  Store,
-  ImageIcon,
-  Users,
-  Settings,
+  Store, // Ikon ini akan kita pakai
   ChevronLeft,
   ChevronRight,
   LogOut,
@@ -19,11 +16,12 @@ import {
 } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 
+// Navigasi diperbarui menjadi lebih simpel
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Products", href: "/products", icon: Package },
   { name: "Banners", href: "/banners", icon: BannerIcon },
-  { name: "Stores", href: "/stores", icon: Store },
+  { name: "Stores", href: "/stores", icon: Store }, // Hanya ada satu menu Stores
 ]
 
 export function Sidebar() {
@@ -52,7 +50,7 @@ export function Sidebar() {
         </div>
         <nav className="flex-1 space-y-1 p-4">
             {navigation.map((item) => {
-                const isActive = pathname === item.href
+                const isActive = pathname.startsWith(item.href) && (item.href === "/" ? pathname === "/" : true);
                 return (
                 <Link key={item.name} href={item.href} className={cn("flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors", isActive ? "bg-sidebar-primary text-sidebar-primary-foreground" : "text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent", collapsed && "justify-center")}>
                     <item.icon className={cn("h-5 w-5", !collapsed && "mr-3")} />
