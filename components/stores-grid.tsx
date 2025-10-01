@@ -3,9 +3,11 @@
 import { useState, useEffect, useCallback } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { StoreForm } from "./store-form"
-import { Edit, Trash2, MoreHorizontal, ChevronLeft, ChevronRight, Store as StoreIcon } from "lucide-react"
+import { StoreDetailView } from "./store-detail-view"
+import { Edit, Trash2, MoreHorizontal, ChevronLeft, ChevronRight, Store as StoreIcon, Eye } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useToast } from "@/hooks/use-toast"
 import { api } from "@/lib/api"
@@ -13,14 +15,16 @@ import type { Store } from "@/types"
 
 interface StoresGridProps {
   searchTerm: string
-  selectedStoreCode: string; // Prop baru untuk filter
+  selectedStoreCode: string; 
   endpoint: string
   onRefresh: () => void
 }
 
 export function StoresGrid({ searchTerm, selectedStoreCode, endpoint, onRefresh }: StoresGridProps) {
   const [editingStore, setEditingStore] = useState<Store | null>(null)
+  const [detailStore, setDetailStore] = useState<Store | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
   const [stores, setStores] = useState<Store[]>([])
   const [filteredStores, setFilteredStores] = useState<Store[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -44,16 +48,13 @@ export function StoresGrid({ searchTerm, selectedStoreCode, endpoint, onRefresh 
     fetchStores();
   }, [fetchStores, onRefresh]);
 
-  // Logika filter diperbarui
   useEffect(() => {
     let results = stores;
 
-    // 1. Filter berdasarkan store code yang dipilih
     if (selectedStoreCode) {
-      results = results.filter(store => store.store_code === selectedStoreCode);
+      results = results.filter(store => store.store_code.toLowerCase() === selectedStoreCode.toLowerCase());
     }
 
-    // 2. Filter berdasarkan teks pencarian dari hasil sebelumnya
     if (searchTerm) {
       results = results.filter(store =>
         store.store_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -62,8 +63,13 @@ export function StoresGrid({ searchTerm, selectedStoreCode, endpoint, onRefresh 
     }
 
     setFilteredStores(results);
-    setCurrentPage(1); // Reset ke halaman pertama setiap kali filter berubah
+    setCurrentPage(1);
   }, [searchTerm, selectedStoreCode, stores]);
+
+  const handleViewDetail = (store: Store) => {
+    setDetailStore(store);
+    setIsDetailDialogOpen(true);
+  };
 
   const handleEdit = (store: Store) => {
     setEditingStore(store);
@@ -102,6 +108,18 @@ export function StoresGrid({ searchTerm, selectedStoreCode, endpoint, onRefresh 
         }
     }
   }
+  
+  const getStatusVariant = (status: string | null | undefined) => {
+    if (!status) return "secondary";
+    switch (status.toLowerCase()) {
+      case 'active':
+        return 'default';
+      case 'inactive':
+        return 'destructive';
+      default:
+        return 'secondary';
+    }
+  }
 
   const indexOfLastStore = currentPage * storesPerPage;
   const indexOfFirstStore = indexOfLastStore - storesPerPage;
@@ -115,7 +133,7 @@ export function StoresGrid({ searchTerm, selectedStoreCode, endpoint, onRefresh 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {currentStores.map((store) => (
           <Card key={store.id} className="bg-card border-border hover:shadow-lg transition-shadow flex flex-col">
-            <CardHeader className="flex-grow">
+            <CardHeader>
               <div className="flex items-start justify-between">
                 <div className="flex items-center space-x-4">
                   <div className="p-3 bg-muted rounded-full">
@@ -133,6 +151,7 @@ export function StoresGrid({ searchTerm, selectedStoreCode, endpoint, onRefresh 
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => handleViewDetail(store)}><Eye className="h-4 w-4 mr-2" />View Detail</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleEdit(store)}><Edit className="h-4 w-4 mr-2" />Edit</DropdownMenuItem>
                     <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(store.id)}><Trash2 className="h-4 w-4 mr-2" />Delete</DropdownMenuItem>
                   </DropdownMenuContent>
@@ -141,6 +160,11 @@ export function StoresGrid({ searchTerm, selectedStoreCode, endpoint, onRefresh 
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground mt-2 truncate h-10">{store.address}</p>
+               {store.status && (
+                  <Badge variant={getStatusVariant(store.status)} className="capitalize mt-2">
+                    {store.status}
+                  </Badge>
+                )}
             </CardContent>
           </Card>
         ))}
@@ -188,6 +212,15 @@ export function StoresGrid({ searchTerm, selectedStoreCode, endpoint, onRefresh 
               onSave={handleUpdateStore}
             />
           )}
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>{detailStore?.store_name || "Store Detail"}</DialogTitle>
+          </DialogHeader>
+          {detailStore && <StoreDetailView store={detailStore} />}
         </DialogContent>
       </Dialog>
     </>

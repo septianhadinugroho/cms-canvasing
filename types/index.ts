@@ -40,6 +40,12 @@ export interface Store {
   longitude: number;
   mid: string;
   tid: string;
+  hotline: string | null;
+  mac_address: string | null;
+  phone_number: string | null;
+  status: string | null;
+  npwp: string | null;
+  ip_address: string | null;
   created_at?: string;
   updated_at?: string;
 }
