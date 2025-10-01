@@ -9,9 +9,11 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
-import type { Product, ProductFormData } from "@/types"
+import type { Product, ProductFormData, Store, Category } from "@/types"
 import { api } from "@/lib/api"
 import { X, Plus } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+
 
 interface ProductFormProps {
   product?: Product
@@ -22,18 +24,19 @@ interface ProductFormProps {
 export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
   const isEditMode = !!product;
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<Omit<ProductFormData, 'price' | 'price_promo'> & { price: string, price_promo: string }>({
     product_name: product?.product_name || "",
     sku: product?.sku || "",
     barcode: product?.barcode || "",
     slug: product?.slug || "",
+    url_image: product?.url_image || "",
     short_name: product?.short_name || "",
-    unit: product?.unit || "",
+    unit: product?.unit || "UNIT",
     description: product?.description || "",
     category_id: product?.category_id || "",
     store_id: product?.store_id || "",
-    price: product?.price || 0,
-    price_promo: 0,
+    price: product?.price?.toString() || "",
+    price_promo: "0",
   });
   
   const [imageUrls, setImageUrls] = useState<string[]>(() => {
@@ -46,7 +49,33 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
     }
   });
 
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [stores, setStores] = useState<Store[]>([]);
+
   const { toast } = useToast()
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [categoriesRes, storesRes] = await Promise.all([
+          api.get<Category[]>('/categories'),
+          api.get<Store[]>('/stores/all')
+        ]);
+        setCategories(categoriesRes);
+        setStores(storesRes);
+      } catch (error) {
+        console.error("Failed to fetch categories or stores", error);
+        toast({
+          title: "Error",
+          description: "Gagal memuat data kategori atau toko.",
+          variant: "destructive",
+        })
+      }
+    };
+
+    fetchData();
+  }, [toast]);
+
 
   // Mengisi form data ketika properti product berubah (untuk mode edit)
   useEffect(() => {
@@ -56,13 +85,14 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
         sku: product.sku || "",
         barcode: product.barcode || "",
         slug: product.slug || "",
+        url_image: product.url_image || "",
         short_name: product.short_name || "",
-        unit: product.unit || "",
+        unit: product.unit || "UNIT",
         description: product.description || "",
         category_id: product.category_id || "",
         store_id: product.store_id || "",
-        price: product.price || 0,
-        price_promo: 0, 
+        price: product.price?.toString() || "",
+        price_promo: "0", 
       });
 
       try {
@@ -129,9 +159,11 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
     const processedImageUrls = imageUrls
       .map(url => convertGoogleDriveUrl(url))
       .filter(url => url.trim() !== "");
-
+      
     const payload: ProductFormData & { url_image: string, store_id?: string } = {
         ...formData,
+        price: parseFloat(formData.price) || 0,
+        price_promo: parseFloat(formData.price_promo) || 0,
         url_image: JSON.stringify(processedImageUrls),
     };
 
@@ -190,27 +222,53 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
                 <Label htmlFor="unit">Unit</Label>
-                <Input id="unit" value={formData.unit} onChange={(e) => setFormData(p => ({ ...p, unit: e.target.value }))} placeholder="Contoh: PCS" required />
+                <Select value={formData.unit} onValueChange={(value) => setFormData(p => ({ ...p, unit: value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih unit" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="UNIT">UNIT</SelectItem>
+                    <SelectItem value="PCS">PCS</SelectItem>
+                  </SelectContent>
+                </Select>
             </div>
             <div className="space-y-2">
                 <Label htmlFor="category_id">ID Kategori</Label>
-                <Input id="category_id" type="text" value={formData.category_id} onChange={(e) => setFormData(p => ({ ...p, category_id: e.target.value }))} placeholder="Contoh: 43" required />
+                <Select value={formData.category_id} onValueChange={(value) => setFormData(p => ({ ...p, category_id: value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih kategori" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map(cat => (
+                      <SelectItem key={cat.id} value={cat.id.toString()}>{cat.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
             </div>
           </div>
            {!isEditMode && (
              <div className="space-y-2">
                 <Label htmlFor="store_id">ID Toko</Label>
-                <Input id="store_id" type="text" value={formData.store_id} onChange={(e) => setFormData(p => ({ ...p, store_id: e.target.value }))} placeholder="Contoh: 10997" required />
+                <Select value={formData.store_id} onValueChange={(value) => setFormData(p => ({ ...p, store_id: value }))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih toko" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {stores.map(store => (
+                      <SelectItem key={store.id} value={store.id.toString()}>{store.store_name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
            )}
            <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <Label htmlFor="price">Harga</Label>
-                    <Input id="price" type="number" value={formData.price} onChange={(e) => setFormData(p => ({ ...p, price: parseFloat(e.target.value) || 0 }))} placeholder="150000" required />
+                    <Input id="price" type="number" value={formData.price} onChange={(e) => setFormData(p => ({ ...p, price: e.target.value }))} placeholder="150000" required />
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="price_promo">Harga Promo</Label>
-                    <Input id="price_promo" type="number" value={formData.price_promo} onChange={(e) => setFormData(p => ({ ...p, price_promo: parseFloat(e.target.value) || 0 }))} placeholder="99000" />
+                    <Input id="price_promo" type="number" value={formData.price_promo} onChange={(e) => setFormData(p => ({ ...p, price_promo: e.target.value }))} placeholder="99000" />
                 </div>
             </div>
         </div>

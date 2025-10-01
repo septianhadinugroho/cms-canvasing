@@ -83,3 +83,9 @@ export interface Customer {
   latitude: string;
   longitude: string;
 }
+
+export interface Category {
+  id: number;
+  name: string;
+  slug: string;
+}

@@ -76,6 +76,16 @@ export function ProductsTable({ searchTerm, storeCode, refreshKey }: ProductsTab
     fetchProducts();
   }, [fetchProducts, refreshKey, currentPage, searchTerm]);
 
+  const convertGoogleDriveUrl = (url: string): string => {
+    const regex = /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/;
+    const match = url.match(regex);
+    if (match && match[1]) {
+      const fileId = match[1];
+      return `https://drive.google.com/uc?export=view&id=${fileId}`;
+    }
+    return url;
+  };
+
   const getFirstImageUrl = (imageUrl: string | null | undefined): string => {
     const placeholder = "/placeholder.svg";
     if (!imageUrl) return placeholder;
@@ -84,7 +94,10 @@ export function ProductsTable({ searchTerm, storeCode, refreshKey }: ProductsTab
       const parsed = JSON.parse(imageUrl);
       if (Array.isArray(parsed) && parsed.length > 0) urlToTest = parsed[0];
     } catch (e) { /* Bukan JSON string, lanjutkan */ }
-    if (typeof urlToTest === 'string' && (urlToTest.startsWith('http') || urlToTest.startsWith('/'))) return urlToTest;
+    
+    if (typeof urlToTest === 'string' && (urlToTest.startsWith('http') || urlToTest.startsWith('/'))) {
+      return convertGoogleDriveUrl(urlToTest);
+    }
     return placeholder;
   };
 

@@ -1,34 +1,4 @@
-// =================================================================
-// DUMMY DATA
-// =================================================================
-const mockUsers = [
-    { id: "1", name: "Admin Utama", email: "admin@canvasing.com", role: "admin", status: "active", lastLogin: "2024-07-28T10:00:00Z", avatar: "/placeholder-user.jpg" },
-];
-const mockStores = [
-    { id: "1", store_code: "JKT-001", store_name: "Canvasing Store Grand Indonesia", created_at: "2024-09-23T10:00:00Z", address: "Jl. M.H. Thamrin No.1, Menteng, Jakarta Pusat", latitude: -6.1934, longitude: 106.8219, mid: "MID-12345", tid: "TID-12345" },
-];
-const mockMedia = [
-    { id: "1", name: "nike-air-max-270.jpg", type: "image", size: 2048576, folder: "products", url: "/product-1.png", uploadDate: "2024-00-15" },
-];
-
-const fetchDummyData = (endpoint: string) => {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            let data: any[] = [];
-            if (endpoint.startsWith("/users")) data = mockUsers;
-            if (endpoint.startsWith("/stores")) data = mockStores;
-            if (endpoint.startsWith("/media")) data = mockMedia;
-            resolve({
-                ok: true,
-                json: () => Promise.resolve({ success: true, data }),
-            });
-        }, 500);
-    });
-};
-// =================================================================
-// AKHIR DARI DUMMY DATA
-// =================================================================
-
+// lib/api.ts
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 const getAuthHeaders = () => {
@@ -57,23 +27,16 @@ export const api = {
   get: async <T>(endpoint: string, params?: Record<string, any>): Promise<T> => {
     if (!API_BASE_URL) throw new Error("NEXT_PUBLIC_API_BASE_URL is not defined");
 
-    const realApiEndpoints = ["/products", "/banners", "/stores", "/salesman", "/customers/all"];
-    
-    let response: any;
-    
-    if (realApiEndpoints.some(path => endpoint.startsWith(path))) {
-        const url = new URL(`${API_BASE_URL}${endpoint}`);
-        if (params) {
-            Object.keys(params).forEach(key => {
-                if(params[key] !== null && params[key] !== undefined) {
-                    url.searchParams.append(key, params[key]);
-                }
-            });
-        }
-        response = await fetch(url.toString(), { headers: getAuthHeaders() });
-    } else {
-      response = await fetchDummyData(endpoint);
+    const url = new URL(`${API_BASE_URL}${endpoint}`);
+    if (params) {
+        Object.keys(params).forEach(key => {
+            if(params[key] !== null && params[key] !== undefined) {
+                url.searchParams.append(key, params[key]);
+            }
+        });
     }
+    const response = await fetch(url.toString(), { headers: getAuthHeaders() });
+
     return handleApiResponse(response);
   },
 
