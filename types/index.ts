@@ -43,7 +43,7 @@ export interface Store {
   hotline: string | null;
   mac_address: string | null;
   phone_number: string | null;
-  status: string | null;
+  status: string | number | null;
   npwp: string | null;
   ip_address: string | null;
   created_at?: string;

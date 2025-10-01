@@ -1,3 +1,5 @@
+// components/stores-grid.tsx
+
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
@@ -20,6 +22,8 @@ interface StoresGridProps {
   onRefresh: () => void
 }
 
+type StatusVariant = 'default' | 'destructive' | 'secondary';
+
 export function StoresGrid({ searchTerm, selectedStoreCode, endpoint, onRefresh }: StoresGridProps) {
   const [editingStore, setEditingStore] = useState<Store | null>(null)
   const [detailStore, setDetailStore] = useState<Store | null>(null);
@@ -31,6 +35,16 @@ export function StoresGrid({ searchTerm, selectedStoreCode, endpoint, onRefresh 
   const [currentPage, setCurrentPage] = useState(1);
   const storesPerPage = 9;
   const { toast } = useToast()
+
+  const getStatusInfo = (status: string | number | null | undefined): { text: string; variant: StatusVariant } => {
+    if (status === 'active' || status === 1) {
+        return { text: 'Active', variant: 'default' };
+    }
+    if (status === 'inactive' || status === 0) {
+        return { text: 'Inactive', variant: 'destructive' };
+    }
+    return { text: 'Unknown', variant: 'secondary' };
+  };
 
   const fetchStores = useCallback(async () => {
     setIsLoading(true);
@@ -108,18 +122,6 @@ export function StoresGrid({ searchTerm, selectedStoreCode, endpoint, onRefresh 
         }
     }
   }
-  
-  const getStatusVariant = (status: string | null | undefined) => {
-    if (!status) return "secondary";
-    switch (status.toLowerCase()) {
-      case 'active':
-        return 'default';
-      case 'inactive':
-        return 'destructive';
-      default:
-        return 'secondary';
-    }
-  }
 
   const indexOfLastStore = currentPage * storesPerPage;
   const indexOfFirstStore = indexOfLastStore - storesPerPage;
@@ -131,43 +133,44 @@ export function StoresGrid({ searchTerm, selectedStoreCode, endpoint, onRefresh 
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {currentStores.map((store) => (
-          <Card key={store.id} className="bg-card border-border hover:shadow-lg transition-shadow flex flex-col">
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="flex items-center space-x-4">
-                  <div className="p-3 bg-muted rounded-full">
-                    <StoreIcon className="h-6 w-6 text-muted-foreground" />
+        {currentStores.map((store) => {
+          const statusInfo = getStatusInfo(store.status);
+          return (
+            <Card key={store.id} className="bg-card border-border hover:shadow-lg transition-shadow flex flex-col">
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center space-x-4">
+                    <div className="p-3 bg-muted rounded-full">
+                      <StoreIcon className="h-6 w-6 text-muted-foreground" />
+                    </div>
+                    <div className="flex-1 mr-2">
+                      <CardTitle className="text-lg font-semibold text-foreground">{store.store_name}</CardTitle>
+                      <p className="text-sm font-mono text-muted-foreground">{store.store_code}</p>
+                    </div>
                   </div>
-                  <div className="flex-1 mr-2">
-                    <CardTitle className="text-lg font-semibold text-foreground">{store.store_name}</CardTitle>
-                    <p className="text-sm font-mono text-muted-foreground">{store.store_code}</p>
-                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleViewDetail(store)}><Eye className="h-4 w-4 mr-2" />View Detail</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleEdit(store)}><Edit className="h-4 w-4 mr-2" />Edit</DropdownMenuItem>
+                      <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(store.id)}><Trash2 className="h-4 w-4 mr-2" />Delete</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                      <MoreHorizontal className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => handleViewDetail(store)}><Eye className="h-4 w-4 mr-2" />View Detail</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleEdit(store)}><Edit className="h-4 w-4 mr-2" />Edit</DropdownMenuItem>
-                    <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(store.id)}><Trash2 className="h-4 w-4 mr-2" />Delete</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground mt-2 truncate h-10">{store.address}</p>
-               {store.status && (
-                  <Badge variant={getStatusVariant(store.status)} className="capitalize mt-2">
-                    {store.status}
-                  </Badge>
-                )}
-            </CardContent>
-          </Card>
-        ))}
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground mt-2 truncate">{store.address}</p>
+                <Badge variant={statusInfo.variant} className="capitalize mt-2">
+                  {statusInfo.text}
+                </Badge>
+              </CardContent>
+            </Card>
+          )
+        })}
       </div>
 
       {filteredStores.length === 0 && !isLoading && (

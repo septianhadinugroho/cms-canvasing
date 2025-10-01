@@ -27,7 +27,7 @@ export function StoreForm({ store, onClose, onSave }: StoreFormProps) {
     hotline: store?.hotline || "",
     mac_address: store?.mac_address || "",
     phone_number: store?.phone_number || "",
-    status: store?.status || "active",
+    status: (store?.status === 0 || store?.status === 'inactive') ? 'inactive' : 'active',
     npwp: store?.npwp || "",
     ip_address: store?.ip_address || "",
   })
@@ -92,22 +92,22 @@ export function StoreForm({ store, onClose, onSave }: StoreFormProps) {
          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
                 <Label htmlFor="hotline">Hotline</Label>
-                <Input id="hotline" value={formData.hotline} onChange={(e) => setFormData(p => ({ ...p, hotline: e.target.value }))} />
+                <Input id="hotline" value={formData.hotline || ''} onChange={(e) => setFormData(p => ({ ...p, hotline: e.target.value }))} />
             </div>
             <div className="space-y-2">
                 <Label htmlFor="phone_number">Phone Number</Label>
-                <Input id="phone_number" value={formData.phone_number} onChange={(e) => setFormData(p => ({ ...p, phone_number: e.target.value }))} />
+                <Input id="phone_number" value={formData.phone_number || ''} onChange={(e) => setFormData(p => ({ ...p, phone_number: e.target.value }))} />
             </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
                 <Label htmlFor="mac_address">MAC Address</Label>
-                <Input id="mac_address" value={formData.mac_address} onChange={(e) => setFormData(p => ({ ...p, mac_address: e.target.value }))} />
+                <Input id="mac_address" value={formData.mac_address || ''} onChange={(e) => setFormData(p => ({ ...p, mac_address: e.target.value }))} />
             </div>
             <div className="space-y-2">
                 <Label htmlFor="npwp">NPWP</Label>
-                <Input id="npwp" value={formData.npwp} onChange={(e) => setFormData(p => ({ ...p, npwp: e.target.value }))} />
+                <Input id="npwp" value={formData.npwp || ''} onChange={(e) => setFormData(p => ({ ...p, npwp: e.target.value }))} />
             </div>
         </div>
 
@@ -126,7 +126,7 @@ export function StoreForm({ store, onClose, onSave }: StoreFormProps) {
             </div>
             <div className="space-y-2">
                 <Label htmlFor="ip_address">IP Address</Label>
-                <Input id="ip_address" value={formData.ip_address} onChange={(e) => setFormData(p => ({ ...p, ip_address: e.target.value }))} />
+                <Input id="ip_address" value={formData.ip_address || ''} onChange={(e) => setFormData(p => ({ ...p, ip_address: e.target.value }))} />
             </div>
         </div>
 

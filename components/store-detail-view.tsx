@@ -9,28 +9,30 @@ interface StoreDetailViewProps {
   store: Store;
 }
 
+type StatusVariant = 'default' | 'destructive' | 'secondary';
+
+
 export function StoreDetailView({ store }: StoreDetailViewProps) {
-  const getStatusVariant = (status: string | null | undefined) => {
-    if (!status) return "secondary";
-    switch (status.toLowerCase()) {
-      case 'active':
-        return 'default';
-      case 'inactive':
-        return 'destructive';
-      default:
-        return 'secondary';
+  const getStatusInfo = (status: string | number | null | undefined): { text: string; variant: StatusVariant } => {
+    if (status === 'active' || status === 1) {
+        return { text: 'Active', variant: 'default' };
     }
-  }
+    if (status === 'inactive' || status === 0) {
+        return { text: 'Inactive', variant: 'destructive' };
+    }
+    return { text: 'Unknown', variant: 'secondary' };
+  };
+  
+  const statusInfo = getStatusInfo(store.status);
+
 
   return (
     <div className="space-y-4 p-2 max-h-[70vh] overflow-y-auto pr-4">
       <div className="flex items-center justify-between">
         <h3 className="font-semibold text-lg">{store.store_name}</h3>
-        {store.status && (
-          <Badge variant={getStatusVariant(store.status)} className="capitalize">
-            {store.status}
-          </Badge>
-        )}
+        <Badge variant={statusInfo.variant} className="capitalize">
+            {statusInfo.text}
+        </Badge>
       </div>
       <div className="grid grid-cols-3 gap-x-4 gap-y-2 text-sm">
         <span className="text-muted-foreground">Store Code</span>
