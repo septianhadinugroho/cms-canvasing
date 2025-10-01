@@ -1,3 +1,5 @@
+// components/products-table.tsx
+
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
@@ -5,7 +7,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { ProductForm } from "./product-form"
-import { Edit, Trash2, MoreHorizontal, ChevronLeft, ChevronRight, AlertCircle } from "lucide-react"
+import { ProductDetailView } from "./product-detail-view"
+import { Edit, Trash2, MoreHorizontal, ChevronLeft, ChevronRight, Eye } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import Image from "next/image"
 import { useToast } from "@/hooks/use-toast"
@@ -19,31 +22,44 @@ interface Pagination {
   perPage: number;
 }
 interface ProductApiResponse {
-  items: Product[];
+  items: Omit<Product, 'price'>[];
   pagination: Pagination;
 }
 interface ProductsTableProps {
   searchTerm: string;
   storeCode: string;
+  refreshKey: number;
 }
 
-export function ProductsTable({ searchTerm, storeCode }: ProductsTableProps) {
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null)
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
-  const [isLoadingDetails, setIsLoadingDetails] = useState(false)
-  const [errorDetails, setErrorDetails] = useState<string | null>(null)
-  const [products, setProducts] = useState<Product[]>([])
-  const [pagination, setPagination] = useState<Pagination | null>(null)
-  const [currentPage, setCurrentPage] = useState(1)
-  const [isLoading, setIsLoading] = useState(true)
-  const { toast } = useToast()
+export function ProductsTable({ searchTerm, storeCode, refreshKey }: ProductsTableProps) {
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [detailProduct, setDetailProduct] = useState<Product | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [pagination, setPagination] = useState<Pagination | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (currentPage !== 1) {
+        setCurrentPage(1);
+    }
+  }, [searchTerm]);
 
   const fetchProducts = useCallback(async () => {
     setIsLoading(true);
     try {
       const params = { storeCode, search: searchTerm, page: currentPage, limit: 10 };
       const response = await api.get<ProductApiResponse>('/products', params);
-      setProducts(response.items);
+      
+      const productsWithPrice = response.items.map(p => ({
+        ...p,
+        price: p.tiers?.[0]?.price ? parseFloat(p.tiers[0].price) : 0,
+      }));
+
+      setProducts(productsWithPrice);
       setPagination(response.pagination);
     } catch (error: any) {
       toast({
@@ -58,7 +74,7 @@ export function ProductsTable({ searchTerm, storeCode }: ProductsTableProps) {
 
   useEffect(() => {
     fetchProducts();
-  }, [fetchProducts]);
+  }, [fetchProducts, refreshKey, currentPage, searchTerm]);
 
   const getFirstImageUrl = (imageUrl: string | null | undefined): string => {
     const placeholder = "/placeholder.svg";
@@ -72,29 +88,29 @@ export function ProductsTable({ searchTerm, storeCode }: ProductsTableProps) {
     return placeholder;
   };
 
-  const handleEdit = async (product: Product) => {
-    setIsEditDialogOpen(true);
-    setIsLoadingDetails(true);
-    setErrorDetails(null);
-    setEditingProduct(null);
-
-    try {
-      const fullProductDataArray = await api.get<Product[]>(`/products/${product.slug}`);
-      if (fullProductDataArray && fullProductDataArray.length > 0) {
-        setEditingProduct(fullProductDataArray[0]);
-      } else {
-        throw new Error("Produk tidak ditemukan.");
-      }
-    } catch (error: any) {
-      setErrorDetails(error.message || "Tidak dapat memuat detail produk.");
-    } finally {
-      setIsLoadingDetails(false);
-    }
+  const handleViewDetail = (product: Product) => {
+    setDetailProduct(product);
+    setIsDetailOpen(true);
   };
 
+  const handleEdit = (product: Product) => {
+    setEditingProduct(product);
+    setIsEditDialogOpen(true);
+  };
+  
   const handleDelete = async (productId: string) => {
     if (window.confirm('Apakah Anda yakin ingin menghapus produk ini?')) {
-      toast({ title: "Fitur Dalam Pengembangan", description: "API untuk delete produk belum tersedia di backend." });
+        try {
+            await api.delete(`/products/${productId}`);
+            toast({ title: "Berhasil!", description: "Produk berhasil dihapus." });
+            fetchProducts();
+        } catch (error: any) {
+            toast({
+                title: "Gagal Menghapus",
+                description: error.message || "Tidak dapat menghapus produk.",
+                variant: "destructive",
+            });
+        }
     }
   }
 
@@ -102,12 +118,6 @@ export function ProductsTable({ searchTerm, storeCode }: ProductsTableProps) {
     setIsEditDialogOpen(false);
     setEditingProduct(null);
     fetchProducts();
-  }
-  
-  const handleDialogClose = () => {
-    setIsEditDialogOpen(false);
-    setErrorDetails(null);
-    setEditingProduct(null);
   }
 
   if (isLoading) {
@@ -130,7 +140,7 @@ export function ProductsTable({ searchTerm, storeCode }: ProductsTableProps) {
           </TableHeader>
           <TableBody>
             {products.map((product) => (
-              <TableRow key={product.id}>
+              <TableRow key={product.product_id}>
                 <TableCell>
                   <div className="flex items-center space-x-3">
                     <div className="relative h-12 w-12 rounded-md overflow-hidden bg-muted">
@@ -139,6 +149,7 @@ export function ProductsTable({ searchTerm, storeCode }: ProductsTableProps) {
                         alt={product.product_name || "Gambar produk"}
                         fill
                         className="object-cover"
+                        unoptimized
                         onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg' }}
                       />
                     </div>
@@ -158,8 +169,9 @@ export function ProductsTable({ searchTerm, storeCode }: ProductsTableProps) {
                       <Button variant="ghost" size="sm" className="h-8 w-8 p-0"><MoreHorizontal className="h-4 w-4" /></Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleViewDetail(product)}><Eye className="h-4 w-4 mr-2" />Lihat Detail</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleEdit(product)}><Edit className="h-4 w-4 mr-2" />Edit</DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(product.id)}><Trash2 className="h-4 w-4 mr-2" />Hapus</DropdownMenuItem>
+                      <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(product.product_id)}><Trash2 className="h-4 w-4 mr-2" />Hapus</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
@@ -180,34 +192,27 @@ export function ProductsTable({ searchTerm, storeCode }: ProductsTableProps) {
         </div>
       )}
 
-      <Dialog open={isEditDialogOpen} onOpenChange={handleDialogClose}>
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
             <DialogTitle>Edit Produk</DialogTitle>
           </DialogHeader>
-          
-          {isLoadingDetails ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-              <p className="ml-4 text-muted-foreground">Memuat detail produk...</p>
-            </div>
-          ) : errorDetails ? (
-            <div className="flex flex-col items-center justify-center h-64 text-center">
-                <AlertCircle className="h-10 w-10 text-destructive mb-4"/>
-                <p className="font-semibold text-destructive">Gagal Mengambil Data</p>
-                <p className="text-sm text-muted-foreground">{errorDetails}</p>
-            </div>
-          ) : editingProduct ? (
+          {editingProduct && (
             <ProductForm
               product={editingProduct}
-              onClose={handleDialogClose}
+              onClose={() => setIsEditDialogOpen(false)}
               onSave={handleProductSave}
             />
-          ) : (
-            <div className="h-64 flex items-center justify-center">
-                 <p className="text-muted-foreground">Silakan coba lagi.</p>
-            </div>
           )}
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>{detailProduct?.product_name || "Detail Produk"}</DialogTitle>
+          </DialogHeader>
+           {detailProduct && <ProductDetailView product={detailProduct} />}
         </DialogContent>
       </Dialog>
     </>

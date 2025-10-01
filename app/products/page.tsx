@@ -1,3 +1,5 @@
+// app/products/page.tsx
+
 "use client"
 
 import { useState } from "react"
@@ -10,11 +12,13 @@ import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Plus, Search } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
+import { useDebounce } from "@/hooks/use-debounce" // Import hook baru
 
 export default function ProductsPage() {
   const [searchTerm, setSearchTerm] = useState("")
+  const debouncedSearchTerm = useDebounce(searchTerm, 500); // Terapkan debounce
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-  const [refreshKey, setRefreshKey] = useState(0); // State untuk refresh
+  const [refreshKey, setRefreshKey] = useState(0); 
   const { isAuthenticated, user } = useAuth()
 
   if (!isAuthenticated) {
@@ -24,7 +28,8 @@ export default function ProductsPage() {
   const storeCode = user?.store_code;
   
   const handleSave = () => {
-    setRefreshKey(prevKey => prevKey + 1); // Trigger refresh pada tabel
+    setIsAddDialogOpen(false);
+    setRefreshKey(prevKey => prevKey + 1); 
   };
 
   return (
@@ -73,8 +78,8 @@ export default function ProductsPage() {
 
             {storeCode ? (
               <ProductsTable 
-                key={refreshKey} // Gunakan key untuk re-render
-                searchTerm={searchTerm} 
+                refreshKey={refreshKey}
+                searchTerm={debouncedSearchTerm} // Gunakan nilai yang sudah di-debounce
                 storeCode={storeCode} 
               />
             ) : (

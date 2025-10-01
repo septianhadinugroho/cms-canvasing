@@ -27,7 +27,7 @@ export function DashboardStats() {
 
       try {
         const [productsResponse, storesResponse] = await Promise.all([
-          api.get<ProductApiResponse>('/products', { storeCode: user.store_code, limit: 1 }),
+          api.get<ProductApiResponse>('/products/all', { storeCode: user.store_code, limit: 1 }),
           api.get<StoreType[]>('/stores/all')
         ]);
         

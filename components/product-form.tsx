@@ -1,13 +1,15 @@
+// components/product-form.tsx
+
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
-import type { Product } from "@/types"
+import type { Product, ProductFormData } from "@/types"
 import { api } from "@/lib/api"
 import { X, Plus } from "lucide-react"
 
@@ -28,8 +30,10 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
     short_name: product?.short_name || "",
     unit: product?.unit || "",
     description: product?.description || "",
-    category_id: String(product?.category_id || ""),
-    store_id: String(product?.store_id || "") 
+    category_id: product?.category_id || "",
+    store_id: product?.store_id || "",
+    price: product?.price || 0,
+    price_promo: 0,
   });
   
   const [imageUrls, setImageUrls] = useState<string[]>(() => {
@@ -43,6 +47,37 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
   });
 
   const { toast } = useToast()
+
+  // Mengisi form data ketika properti product berubah (untuk mode edit)
+  useEffect(() => {
+    if (product) {
+      setFormData({
+        product_name: product.product_name || "",
+        sku: product.sku || "",
+        barcode: product.barcode || "",
+        slug: product.slug || "",
+        short_name: product.short_name || "",
+        unit: product.unit || "",
+        description: product.description || "",
+        category_id: product.category_id || "",
+        store_id: product.store_id || "",
+        price: product.price || 0,
+        price_promo: 0, 
+      });
+
+      try {
+        const parsedImages = JSON.parse(product.url_image);
+        if (Array.isArray(parsedImages) && parsedImages.length > 0) {
+          setImageUrls(parsedImages);
+        } else {
+          setImageUrls([product.url_image || ""]);
+        }
+      } catch {
+        setImageUrls([product.url_image || ""]);
+      }
+
+    }
+  }, [product]);
 
   const convertGoogleDriveUrl = (url: string): string => {
     const regex = /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/;
@@ -80,9 +115,8 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
     }
   };
 
-
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     if (!formData.product_name || !formData.sku || (!isEditMode && !formData.store_id) || !formData.category_id) {
       toast({
         title: "Error",
@@ -96,20 +130,21 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
       .map(url => convertGoogleDriveUrl(url))
       .filter(url => url.trim() !== "");
 
-    const { store_id, ...payloadData } = formData;
-    const payloadForPut = {
-      ...payloadData,
-      url_image: JSON.stringify(processedImageUrls),
+    const payload: ProductFormData & { url_image: string, store_id?: string } = {
+        ...formData,
+        url_image: JSON.stringify(processedImageUrls),
     };
-    
-    const payloadForPost = { ...payloadForPut, store_id };
+
+    if (!isEditMode) {
+        payload.store_id = formData.store_id;
+    }
 
     try {
       if (isEditMode && product) {
-        await api.put(`/products/${product.id}`, payloadForPut);
+        await api.put(`/products/${product.product_id}`, payload);
         toast({ title: "Berhasil!", description: "Produk berhasil diupdate." });
       } else {
-        await api.post("/products", payloadForPost);
+        await api.post("/products", payload);
         toast({ title: "Berhasil!", description: "Produk berhasil ditambahkan." });
       }
       onSave();
@@ -168,6 +203,16 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
                 <Input id="store_id" type="text" value={formData.store_id} onChange={(e) => setFormData(p => ({ ...p, store_id: e.target.value }))} placeholder="Contoh: 10997" required />
               </div>
            )}
+           <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                    <Label htmlFor="price">Harga</Label>
+                    <Input id="price" type="number" value={formData.price} onChange={(e) => setFormData(p => ({ ...p, price: parseFloat(e.target.value) || 0 }))} placeholder="150000" required />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="price_promo">Harga Promo</Label>
+                    <Input id="price_promo" type="number" value={formData.price_promo} onChange={(e) => setFormData(p => ({ ...p, price_promo: parseFloat(e.target.value) || 0 }))} placeholder="99000" />
+                </div>
+            </div>
         </div>
       </div>
 

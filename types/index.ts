@@ -1,7 +1,12 @@
 // types/index.ts
 
+export interface Tier {
+  min_quantity: number;
+  price: string;
+}
+
 export interface Product {
-  id: string;
+  product_id: string;
   sku: string;
   barcode: string;
   product_name: string;
@@ -10,14 +15,19 @@ export interface Product {
   short_name: string;
   unit: string;
   description: string;
-  category_id: string; // Diubah jadi string untuk input
+  category_id: string; // Pastikan ini string
   name_category: string;
   stock: number;
-  price: number;
-  store_id: string; // Ditambahkan
+  store_id: string;
+  tiers: Tier[];
+  price: number; // Ini akan diturunkan dari tiers
 }
 
-export type ProductFormData = Omit<Product, 'id' | 'name_category' | 'stock' | 'price'>;
+export type ProductFormData = Omit<Product, 'product_id' | 'name_category' | 'stock' | 'price' | 'tiers'> & {
+  price: number;
+  price_promo?: number;
+};
+
 
 export type BannerImages = string[];
 
