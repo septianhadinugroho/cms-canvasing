@@ -63,8 +63,8 @@ export function ProductsTable({ searchTerm, storeCode, refreshKey }: ProductsTab
       setPagination(response.pagination);
     } catch (error: any) {
       toast({
-        title: "Terjadi Kesalahan",
-        description: error.message || "Gagal memuat data produk dari server.",
+        title: "An error occurred",
+        description: error.message || "Failed to load product data from the server.",
         variant: "destructive",
       });
     } finally {
@@ -93,7 +93,7 @@ export function ProductsTable({ searchTerm, storeCode, refreshKey }: ProductsTab
     try {
       const parsed = JSON.parse(imageUrl);
       if (Array.isArray(parsed) && parsed.length > 0) urlToTest = parsed[0];
-    } catch (e) { /* Bukan JSON string, lanjutkan */ }
+    } catch (e) { /* Not a JSON string, continue */ }
     
     if (typeof urlToTest === 'string' && (urlToTest.startsWith('http') || urlToTest.startsWith('/'))) {
       return convertGoogleDriveUrl(urlToTest);
@@ -112,15 +112,15 @@ export function ProductsTable({ searchTerm, storeCode, refreshKey }: ProductsTab
   };
   
   const handleDelete = async (productId: string) => {
-    if (window.confirm('Apakah Anda yakin ingin menghapus produk ini?')) {
+    if (window.confirm('Are you sure you want to delete this product?')) {
         try {
             await api.delete(`/products/${productId}`);
-            toast({ title: "Berhasil!", description: "Produk berhasil dihapus." });
+            toast({ title: "Success!", description: "Product deleted successfully." });
             fetchProducts();
         } catch (error: any) {
             toast({
-                title: "Gagal Menghapus",
-                description: error.message || "Tidak dapat menghapus produk.",
+                title: "Deletion Failed",
+                description: error.message || "Could not delete the product.",
                 variant: "destructive",
             });
         }
@@ -134,7 +134,7 @@ export function ProductsTable({ searchTerm, storeCode, refreshKey }: ProductsTab
   }
 
   if (isLoading) {
-    return <div className="text-center py-12">Memuat data produk...</div>
+    return <div className="text-center py-12">Loading product data...</div>
   }
 
   return (
@@ -143,11 +143,11 @@ export function ProductsTable({ searchTerm, storeCode, refreshKey }: ProductsTab
         <Table>
            <TableHeader>
             <TableRow>
-              <TableHead>Produk</TableHead>
+              <TableHead>Product</TableHead>
               <TableHead>SKU</TableHead>
-              <TableHead>Kategori</TableHead>
-              <TableHead>Stok</TableHead>
-              <TableHead>Harga</TableHead>
+              <TableHead>Category</TableHead>
+              <TableHead>Stock</TableHead>
+              <TableHead>Price</TableHead>
               <TableHead className="w-12"></TableHead>
             </TableRow>
           </TableHeader>
@@ -159,7 +159,7 @@ export function ProductsTable({ searchTerm, storeCode, refreshKey }: ProductsTab
                     <div className="relative h-12 w-12 rounded-md overflow-hidden bg-muted">
                       <Image
                         src={getFirstImageUrl(product.url_image)}
-                        alt={product.product_name || "Gambar produk"}
+                        alt={product.product_name || "Product image"}
                         fill
                         className="object-cover"
                         unoptimized
@@ -182,9 +182,9 @@ export function ProductsTable({ searchTerm, storeCode, refreshKey }: ProductsTab
                       <Button variant="ghost" size="sm" className="h-8 w-8 p-0"><MoreHorizontal className="h-4 w-4" /></Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleViewDetail(product)}><Eye className="h-4 w-4 mr-2" />Lihat Detail</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleViewDetail(product)}><Eye className="h-4 w-4 mr-2" />View Detail</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleEdit(product)}><Edit className="h-4 w-4 mr-2" />Edit</DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(product.product_id)}><Trash2 className="h-4 w-4 mr-2" />Hapus</DropdownMenuItem>
+                      <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(product.product_id)}><Trash2 className="h-4 w-4 mr-2" />Delete</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
@@ -193,22 +193,22 @@ export function ProductsTable({ searchTerm, storeCode, refreshKey }: ProductsTab
           </TableBody>
         </Table>
         {!products.length && !isLoading && (
-          <div className="text-center py-12"><p className="text-muted-foreground">Tidak ada produk ditemukan.</p></div>
+          <div className="text-center py-12"><p className="text-muted-foreground">No products found.</p></div>
         )}
       </div>
 
       {pagination && pagination.totalPages > 1 && (
         <div className="flex items-center justify-end space-x-2 py-4">
-            <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => p - 1)} disabled={currentPage === 1}><ChevronLeft className="h-4 w-4" /> Sebelumnya</Button>
-            <span className="text-sm">Halaman {pagination.currentPage} dari {pagination.totalPages}</span>
-            <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => p + 1)} disabled={currentPage === pagination.totalPages}>Selanjutnya <ChevronRight className="h-4 w-4" /></Button>
+            <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => p - 1)} disabled={currentPage === 1}><ChevronLeft className="h-4 w-4" /> Previous</Button>
+            <span className="text-sm">Page {pagination.currentPage} of {pagination.totalPages}</span>
+            <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => p + 1)} disabled={currentPage === pagination.totalPages}>Next <ChevronRight className="h-4 w-4" /></Button>
         </div>
       )}
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>Edit Produk</DialogTitle>
+            <DialogTitle>Edit Product</DialogTitle>
           </DialogHeader>
           {editingProduct && (
             <ProductForm
@@ -223,7 +223,7 @@ export function ProductsTable({ searchTerm, storeCode, refreshKey }: ProductsTab
       <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
         <DialogContent className="max-w-4xl">
           <DialogHeader>
-            <DialogTitle>{detailProduct?.product_name || "Detail Produk"}</DialogTitle>
+            <DialogTitle>{detailProduct?.product_name || "Product Detail"}</DialogTitle>
           </DialogHeader>
            {detailProduct && <ProductDetailView product={detailProduct} />}
         </DialogContent>

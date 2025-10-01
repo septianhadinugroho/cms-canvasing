@@ -11,7 +11,17 @@ import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import type { Product, ProductFormData, Store, Category } from "@/types"
 import { api } from "@/lib/api"
-import { X, Plus } from "lucide-react"
+import { X, Plus, ChevronsUpDown, Check } from "lucide-react"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command"
+import { cn } from "@/lib/utils"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 
@@ -51,6 +61,8 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [stores, setStores] = useState<Store[]>([]);
+  const [isCategoryPopoverOpen, setCategoryPopoverOpen] = useState(false)
+  const [isStorePopoverOpen, setStorePopoverOpen] = useState(false)
 
   const { toast } = useToast()
 
@@ -61,13 +73,17 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
           api.get<Category[]>('/categories'),
           api.get<Store[]>('/stores/all')
         ]);
+        
+        // Log data kategori untuk debugging
+        console.log("Categories fetched from API:", categoriesRes);
+
         setCategories(categoriesRes);
         setStores(storesRes);
       } catch (error) {
         console.error("Failed to fetch categories or stores", error);
         toast({
           title: "Error",
-          description: "Gagal memuat data kategori atau toko.",
+          description: "Failed to load category or store data.",
           variant: "destructive",
         })
       }
@@ -77,7 +93,7 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
   }, [toast]);
 
 
-  // Mengisi form data ketika properti product berubah (untuk mode edit)
+  // Fill form data when product prop changes (for edit mode)
   useEffect(() => {
     if (product) {
       setFormData({
@@ -150,7 +166,7 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
     if (!formData.product_name || !formData.sku || (!isEditMode && !formData.store_id) || !formData.category_id) {
       toast({
         title: "Error",
-        description: "Field yang wajib diisi tidak boleh kosong.",
+        description: "Required fields cannot be empty.",
         variant: "destructive",
       })
       return
@@ -174,17 +190,17 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
     try {
       if (isEditMode && product) {
         await api.put(`/products/${product.product_id}`, payload);
-        toast({ title: "Berhasil!", description: "Produk berhasil diupdate." });
+        toast({ title: "Success!", description: "Product updated successfully." });
       } else {
         await api.post("/products", payload);
-        toast({ title: "Berhasil!", description: "Produk berhasil ditambahkan." });
+        toast({ title: "Success!", description: "Product added successfully." });
       }
       onSave();
       onClose();
     } catch (error: any) {
        toast({
-        title: "Terjadi Kesalahan",
-        description: error.message || "Gagal menyimpan produk.",
+        title: "An error occurred",
+        description: error.message || "Failed to save the product.",
         variant: "destructive",
       });
     }
@@ -195,16 +211,16 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="product_name">Nama Produk</Label>
-            <Input id="product_name" value={formData.product_name} onChange={(e) => setFormData((prev) => ({ ...prev, product_name: e.target.value }))} placeholder="Contoh: Nike Air Max" required />
+            <Label htmlFor="product_name">Product Name</Label>
+            <Input id="product_name" value={formData.product_name} onChange={(e) => setFormData((prev) => ({ ...prev, product_name: e.target.value }))} placeholder="e.g., Nike Air Max" required />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="short_name">Nama Pendek</Label>
-            <Input id="short_name" value={formData.short_name} onChange={(e) => setFormData((prev) => ({ ...prev, short_name: e.target.value }))} placeholder="Contoh: Air Max" />
+            <Label htmlFor="short_name">Short Name</Label>
+            <Input id="short_name" value={formData.short_name} onChange={(e) => setFormData((prev) => ({ ...prev, short_name: e.target.value }))} placeholder="e.g., Air Max" />
           </div>
            <div className="space-y-2">
             <Label htmlFor="slug">Slug</Label>
-            <Input id="slug" value={formData.slug} onChange={(e) => setFormData((prev) => ({ ...prev, slug: e.target.value }))} placeholder="contoh: nike-air-max" />
+            <Input id="slug" value={formData.slug} onChange={(e) => setFormData((prev) => ({ ...prev, slug: e.target.value }))} placeholder="e.g., nike-air-max" />
           </div>
         </div>
 
@@ -224,7 +240,7 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
                 <Label htmlFor="unit">Unit</Label>
                 <Select value={formData.unit} onValueChange={(value) => setFormData(p => ({ ...p, unit: value }))}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Pilih unit" />
+                    <SelectValue placeholder="Select a unit" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="UNIT">UNIT</SelectItem>
@@ -233,41 +249,107 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
                 </Select>
             </div>
             <div className="space-y-2">
-                <Label htmlFor="category_id">ID Kategori</Label>
-                <Select value={formData.category_id} onValueChange={(value) => setFormData(p => ({ ...p, category_id: value }))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Pilih kategori" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {categories.map(cat => (
-                      <SelectItem key={cat.id} value={cat.id.toString()}>{cat.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="category_id">Category</Label>
+                <Popover open={isCategoryPopoverOpen} onOpenChange={setCategoryPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={isCategoryPopoverOpen}
+                      className="w-full justify-between"
+                    >
+                      {formData.category_id
+                        ? categories.find((cat) => cat.id.toString() === formData.category_id)?.name
+                        : "Select category..."}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                    <Command>
+                      <CommandInput placeholder="Search category..." />
+                      <CommandList>
+                        <CommandEmpty>No category found.</CommandEmpty>
+                        <CommandGroup>
+                          {categories.map((cat) => (
+                            <CommandItem
+                              key={cat.id}
+                              value={cat.name}
+                              onSelect={() => {
+                                setFormData(prev => ({ ...prev, category_id: cat.id.toString() }))
+                                setCategoryPopoverOpen(false)
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  formData.category_id === cat.id.toString() ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              {cat.name}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
             </div>
           </div>
            {!isEditMode && (
              <div className="space-y-2">
-                <Label htmlFor="store_id">ID Toko</Label>
-                <Select value={formData.store_id} onValueChange={(value) => setFormData(p => ({ ...p, store_id: value }))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Pilih toko" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {stores.map(store => (
-                      <SelectItem key={store.id} value={store.id.toString()}>{store.store_name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label htmlFor="store_id">Store</Label>
+                <Popover open={isStorePopoverOpen} onOpenChange={setStorePopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={isStorePopoverOpen}
+                      className="w-full justify-between"
+                    >
+                      {formData.store_id
+                        ? stores.find((store) => store.id.toString() === formData.store_id)?.store_name
+                        : "Select store..."}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                    <Command>
+                      <CommandInput placeholder="Search store..." />
+                      <CommandList>
+                        <CommandEmpty>No store found.</CommandEmpty>
+                        <CommandGroup>
+                          {stores.map((store) => (
+                            <CommandItem
+                              key={store.id}
+                              value={store.store_name}
+                              onSelect={() => {
+                                setFormData(prev => ({ ...prev, store_id: store.id.toString() }))
+                                setStorePopoverOpen(false)
+                              }}
+                            >
+                              <Check
+                                className={cn(
+                                  "mr-2 h-4 w-4",
+                                  formData.store_id === store.id.toString() ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              {store.store_name}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
            )}
            <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                    <Label htmlFor="price">Harga</Label>
+                    <Label htmlFor="price">Price</Label>
                     <Input id="price" type="number" value={formData.price} onChange={(e) => setFormData(p => ({ ...p, price: e.target.value }))} placeholder="150000" required />
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="price_promo">Harga Promo</Label>
+                    <Label htmlFor="price_promo">Promo Price</Label>
                     <Input id="price_promo" type="number" value={formData.price_promo} onChange={(e) => setFormData(p => ({ ...p, price_promo: e.target.value }))} placeholder="99000" />
                 </div>
             </div>
@@ -275,14 +357,14 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
       </div>
 
       <div className="space-y-2">
-        <Label>URL Gambar</Label>
+        <Label>Image URLs</Label>
         {imageUrls.map((url, index) => (
           <div key={index} className="flex items-center space-x-2">
             <Input
               value={url}
               onChange={(e) => handleImageUrlChange(index, e.target.value)}
               onBlur={() => handleUrlInputBlur(index)}
-              placeholder="Tempel link Google Drive di sini"
+              placeholder="https://images.tokopedia.net/"
             />
             {imageUrls.length > 1 && (
               <Button type="button" variant="ghost" size="icon" onClick={() => removeImageUrlInput(index)}>
@@ -293,18 +375,18 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
         ))}
          <Button type="button" variant="outline" size="sm" onClick={addImageUrlInput} className="mt-2">
             <Plus className="h-4 w-4 mr-2" />
-            Tambah URL
+            Add URL
         </Button>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="description">Deskripsi</Label>
-        <Textarea id="description" value={formData.description} onChange={(e) => setFormData(p => ({ ...p, description: e.target.value }))} placeholder="Masukkan deskripsi produk" rows={3} />
+        <Label htmlFor="description">Description</Label>
+        <Textarea id="description" value={formData.description} onChange={(e) => setFormData(p => ({ ...p, description: e.target.value }))} placeholder="Enter product description" rows={3} />
       </div>
 
       <div className="flex justify-end space-x-4 pt-4">
-        <Button type="button" variant="outline" onClick={onClose}>Batal</Button>
-        <Button type="submit">{product ? "Update Produk" : "Tambah Produk"}</Button>
+        <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+        <Button type="submit">{product ? "Update Product" : "Add Product"}</Button>
       </div>
     </form>
   )

@@ -12,11 +12,11 @@ import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Plus, Search } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
-import { useDebounce } from "@/hooks/use-debounce" // Import hook baru
+import { useDebounce } from "@/hooks/use-debounce" // Import new hook
 
 export default function ProductsPage() {
   const [searchTerm, setSearchTerm] = useState("")
-  const debouncedSearchTerm = useDebounce(searchTerm, 500); // Terapkan debounce
+  const debouncedSearchTerm = useDebounce(searchTerm, 500); // Apply debounce
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [refreshKey, setRefreshKey] = useState(0); 
   const { isAuthenticated, user } = useAuth()
@@ -41,20 +41,20 @@ export default function ProductsPage() {
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h1 className="text-3xl font-semibold text-foreground mb-2">Manajemen Produk</h1>
-                <p className="text-muted-foreground">Kelola semua produk, SKU, dan inventaris Anda</p>
+                <h1 className="text-3xl font-semibold text-foreground mb-2">Product Management</h1>
+                <p className="text-muted-foreground">Manage all your products, SKUs, and inventory</p>
               </div>
 
               <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
                 <DialogTrigger asChild>
                   <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
                     <Plus className="h-4 w-4 mr-2" />
-                    Tambah Produk
+                    Add Product
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-w-3xl">
                   <DialogHeader>
-                    <DialogTitle className="text-foreground">Tambah Produk Baru</DialogTitle>
+                    <DialogTitle className="text-foreground">Add New Product</DialogTitle>
                   </DialogHeader>
                   <ProductForm 
                     onClose={() => setIsAddDialogOpen(false)} 
@@ -68,7 +68,7 @@ export default function ProductsPage() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Cari produk berdasarkan nama..."
+                  placeholder="Search products by name..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 bg-background border-border text-foreground placeholder:text-muted-foreground"
@@ -79,12 +79,12 @@ export default function ProductsPage() {
             {storeCode ? (
               <ProductsTable 
                 refreshKey={refreshKey}
-                searchTerm={debouncedSearchTerm} // Gunakan nilai yang sudah di-debounce
+                searchTerm={debouncedSearchTerm} // Use debounced value
                 storeCode={storeCode} 
               />
             ) : (
               <div className="text-center py-12">
-                <p className="text-muted-foreground">Kode toko tidak ditemukan untuk pengguna ini.</p>
+                <p className="text-muted-foreground">Store code not found for this user.</p>
               </div>
             )}
           </div>
