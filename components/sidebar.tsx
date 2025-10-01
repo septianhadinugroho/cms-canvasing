@@ -8,20 +8,23 @@ import { Button } from "@/components/ui/button"
 import {
   LayoutDashboard,
   Package,
-  Store, // Ikon ini akan kita pakai
+  Store,
   ChevronLeft,
   ChevronRight,
   LogOut,
   Image as BannerIcon,
+  Users,
+  User, // Ikon baru untuk Customers
 } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 
-// Navigasi diperbarui menjadi lebih simpel
 const navigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Products", href: "/products", icon: Package },
   { name: "Banners", href: "/banners", icon: BannerIcon },
-  { name: "Stores", href: "/stores", icon: Store }, // Hanya ada satu menu Stores
+  { name: "Stores", href: "/stores", icon: Store },
+  { name: "Salesman", href: "/salesman", icon: Users },
+  { name: "Customers", href: "/customers", icon: User }, // Menu Customers ditambahkan
 ]
 
 export function Sidebar() {

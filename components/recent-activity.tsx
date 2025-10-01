@@ -4,30 +4,30 @@ import { Badge } from "@/components/ui/badge"
 const activities = [
   {
     id: 1,
-    action: "Produk baru ditambahkan",
-    item: "Sepatu Nike Air Max",
-    time: "2 menit yang lalu",
+    action: "New Product Added",
+    item: "Nike Air Max",
+    time: "2 minutes ago",
     status: "success",
   },
   {
     id: 2,
-    action: "Stok diperbarui",
-    item: "Tas Adidas Original",
-    time: "15 menit yang lalu",
+    action: "Store Updated",
+    item: "Store JKT-001 details were modified.",
+    time: "15 minutes ago",
     status: "info",
   },
   {
     id: 3,
-    action: "Harga diubah",
-    item: "Jaket Uniqlo",
-    time: "1 jam yang lalu",
+    action: "Salesman Deleted",
+    item: "Salesman 'budi.santoso' was removed.",
+    time: "1 hour ago",
     status: "warning",
   },
   {
     id: 4,
-    action: "Toko baru ditambahkan",
-    item: "Toko Pusat Jakarta",
-    time: "3 jam yang lalu",
+    action: "New Customer Registered",
+    item: "salman (saf4291@gmail.com)",
+    time: "3 hours ago",
     status: "success",
   },
 ]
@@ -36,7 +36,7 @@ export function RecentActivity() {
   return (
     <Card className="bg-card border-border">
       <CardHeader>
-        <CardTitle className="text-card-foreground">Aktivitas Terbaru</CardTitle>
+        <CardTitle className="text-card-foreground">Recent Activity</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -49,9 +49,9 @@ export function RecentActivity() {
               <div className="flex items-center space-x-2">
                 <Badge
                   variant={
-                    activity.status === "success" ? "default" : activity.status === "warning" ? "secondary" : "outline"
+                    activity.status === "success" ? "default" : activity.status === "warning" ? "destructive" : "secondary"
                   }
-                  className="text-xs"
+                  className="text-xs capitalize"
                 >
                   {activity.status}
                 </Badge>

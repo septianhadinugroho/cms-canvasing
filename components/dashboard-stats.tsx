@@ -2,10 +2,9 @@
 
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Package, Store, TrendingUp, DollarSign } from "lucide-react"
+import { Package, Store, Users, User } from "lucide-react" // Import new icons
 import { api } from "@/lib/api"
-import { useAuth } from "./auth-provider"
-import type { Product, Store as StoreType } from "@/types"
+import type { Product, Store as StoreType, Salesman, Customer } from "@/types"
 
 interface ProductApiResponse {
   items: Product[]
@@ -14,60 +13,63 @@ interface ProductApiResponse {
 
 export function DashboardStats() {
   const [totalProducts, setTotalProducts] = useState<number | string>("...")
-  const [activeStores, setActiveStores] = useState<number | string>("...")
-  const { user } = useAuth()
+  const [totalStores, setTotalStores] = useState<number | string>("...")
+  const [totalSalesmen, setTotalSalesmen] = useState<number | string>("...")
+  const [totalCustomers, setTotalCustomers] = useState<number | string>("...")
 
   useEffect(() => {
     const fetchStats = async () => {
-      if (!user?.store_code) {
-          setTotalProducts(0);
-          setActiveStores(0);
-          return;
-      };
-
       try {
-        const [productsResponse, storesResponse] = await Promise.all([
-          api.get<ProductApiResponse>('/products/all', { storeCode: user.store_code, limit: 1 }),
-          api.get<StoreType[]>('/stores/all')
+        // Fetch all data concurrently
+        const [
+          productsResponse, 
+          storesResponse, 
+          salesmenResponse, 
+          customersResponse
+        ] = await Promise.all([
+          api.get<ProductApiResponse>('/products/all', { limit: 1 }),
+          api.get<StoreType[]>('/stores/all'),
+          api.get<Salesman[]>('/salesman'),
+          api.get<Customer[]>('/customers/all')
         ]);
         
         setTotalProducts(productsResponse.pagination.totalData);
-        setActiveStores(storesResponse.length);
+        setTotalStores(storesResponse.length);
+        setTotalSalesmen(salesmenResponse.length);
+        setTotalCustomers(customersResponse.length);
 
       } catch (error) {
-        console.error("Gagal mengambil data statistik dashboard:", error);
+        console.error("Failed to fetch dashboard stats:", error);
         setTotalProducts("Error");
-        setActiveStores("Error");
+        setTotalStores("Error");
+        setTotalSalesmen("Error");
+        setTotalCustomers("Error");
       }
     };
 
     fetchStats();
-  }, [user]);
+  }, []);
 
   const stats = [
     {
-      title: "Total Produk",
+      title: "Total Products",
       value: totalProducts,
-      change: "", 
       icon: Package,
     },
     {
-      title: "Toko Aktif",
-      value: activeStores,
-      change: "", 
+      title: "Total Stores",
+      value: totalStores,
       icon: Store,
     },
     {
-      title: "Penjualan Bulan Ini",
-      value: "Rp 0",
-      change: "N/A",
-      icon: TrendingUp,
+      title: "Total Salesmen",
+      value: totalSalesmen,
+      icon: Users,
     },
     {
-      title: "Rata-rata Harga",
-      value: "Rp 0",
-      change: "N/A",
-      icon: DollarSign,
+      title: "Total Customers",
+      value: totalCustomers,
+      icon: User,
     },
   ];
 
@@ -81,9 +83,6 @@ export function DashboardStats() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-card-foreground">{stat.value}</div>
-            {stat.change && (
-                <p className="text-xs text-muted-foreground mt-1">{stat.change}</p>
-            )}
           </CardContent>
         </Card>
       ))}

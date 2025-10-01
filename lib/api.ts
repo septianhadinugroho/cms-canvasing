@@ -8,7 +8,7 @@ const mockStores = [
     { id: "1", store_code: "JKT-001", store_name: "Canvasing Store Grand Indonesia", created_at: "2024-09-23T10:00:00Z", address: "Jl. M.H. Thamrin No.1, Menteng, Jakarta Pusat", latitude: -6.1934, longitude: 106.8219, mid: "MID-12345", tid: "TID-12345" },
 ];
 const mockMedia = [
-    { id: "1", name: "nike-air-max-270.jpg", type: "image", size: 2048576, folder: "products", url: "/product-1.png", uploadDate: "2024-01-15" },
+    { id: "1", name: "nike-air-max-270.jpg", type: "image", size: 2048576, folder: "products", url: "/product-1.png", uploadDate: "2024-00-15" },
 ];
 
 const fetchDummyData = (endpoint: string) => {
@@ -57,8 +57,7 @@ export const api = {
   get: async <T>(endpoint: string, params?: Record<string, any>): Promise<T> => {
     if (!API_BASE_URL) throw new Error("NEXT_PUBLIC_API_BASE_URL is not defined");
 
-    // Daftarkan /stores sebagai endpoint yang sudah siap
-    const realApiEndpoints = ["/products", "/banners", "/stores"];
+    const realApiEndpoints = ["/products", "/banners", "/stores", "/salesman", "/customers/all"];
     
     let response: any;
     
@@ -90,7 +89,6 @@ export const api = {
     return handleApiResponse(response);
   },
 
-  // Method baru untuk update
   put: async <T>(endpoint: string, body: unknown): Promise<T> => {
     if (!API_BASE_URL) throw new Error("NEXT_PUBLIC_API_BASE_URL is not defined");
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
@@ -101,7 +99,6 @@ export const api = {
     return handleApiResponse(response);
   },
 
-  // Method baru untuk delete
   delete: async <T>(endpoint: string): Promise<T> => {
     if (!API_BASE_URL) throw new Error("NEXT_PUBLIC_API_BASE_URL is not defined");
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {

@@ -2,13 +2,12 @@
 
 import { Sidebar } from "@/components/sidebar"
 import { Header } from "@/components/header"
-import { DashboardStats } from "@/components/dashboard-stats"
-import { RecentActivity } from "@/components/recent-activity"
+import { CustomersTable } from "@/components/customers-table"
 import { useAuth } from "@/components/auth-provider"
 
-export default function Dashboard() {
+export default function CustomersPage() {
   const { isAuthenticated } = useAuth()
-
+    
   if (!isAuthenticated) {
     return null
   }
@@ -20,12 +19,15 @@ export default function Dashboard() {
         <Header />
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-background p-6">
           <div className="max-w-7xl mx-auto">
-            <div className="mb-8">
-              <p className="text-muted-foreground">Easily manage your products, stores, salesmen, and customers.</p>
+            <div className="flex items-center justify-between mb-8">
+              <div>
+                <h1 className="text-3xl font-semibold text-foreground mb-2">Customer Management</h1>
+                <p className="text-muted-foreground">View all customer data in the system</p>
+              </div>
             </div>
+            
+            <CustomersTable />
 
-            <DashboardStats />
-            <RecentActivity />
           </div>
         </main>
       </div>
