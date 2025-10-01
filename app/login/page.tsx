@@ -39,7 +39,7 @@ export default function LoginPage() {
 
     try {
       // Panggil API login dari backend
-      const response = await api.post<LoginResponse>("/auth/login", {
+      const response = await api.post<LoginResponse>("/auth/login-cms", {
         username, // Key disesuaikan menjadi 'username'
         password,
       })

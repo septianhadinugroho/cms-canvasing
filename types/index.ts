@@ -1,4 +1,5 @@
 // types/index.ts
+// types/index.ts
 
 export interface Tier {
   min_quantity: number;
@@ -64,6 +65,7 @@ export interface Salesman {
   id: string;
   name: string;
   username: string;
+  password?: string;
   store_code: string;
   store_name: string;
   address: string;
