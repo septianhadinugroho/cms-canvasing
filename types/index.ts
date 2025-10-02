@@ -20,9 +20,11 @@ export interface Product {
   store_id: string;
   tiers: Tier[];
   price: number;
+  vat?: number;
+  departmentCode?: string;
 }
 
-export type ProductFormData = Omit<Product, 'product_id' | 'name_category' | 'stock' | 'price' | 'tiers'> & {
+export type ProductFormData = Omit<Product, 'product_id' | 'name_category' | 'price' | 'tiers'> & {
   price: number;
   price_promo?: number;
 };

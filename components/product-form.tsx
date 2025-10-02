@@ -34,7 +34,7 @@ interface ProductFormProps {
 export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
   const isEditMode = !!product;
 
-  const [formData, setFormData] = useState<Omit<ProductFormData, 'price' | 'price_promo'> & { price: string, price_promo: string }>({
+  const [formData, setFormData] = useState({
     product_name: product?.product_name || "",
     sku: product?.sku || "",
     barcode: product?.barcode || "",
@@ -47,6 +47,9 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
     store_id: product?.store_id || "",
     price: product?.price?.toString() || "",
     price_promo: "0",
+    vat: product?.vat?.toString() || "",
+    departmentCode: product?.departmentCode || "",
+    stock: product?.stock?.toString() || "0",
   });
   
   const [imageUrls, setImageUrls] = useState<string[]>(() => {
@@ -109,6 +112,9 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
         store_id: product.store_id || "",
         price: product.price?.toString() || "",
         price_promo: "0", 
+        vat: product.vat?.toString() || "",
+        departmentCode: product.departmentCode || "",
+        stock: product.stock?.toString() || "0",
       });
 
       try {
@@ -180,6 +186,9 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
         ...formData,
         price: parseFloat(formData.price) || 0,
         price_promo: parseFloat(formData.price_promo) || 0,
+        vat: parseFloat(formData.vat) || 0,
+        departmentCode: formData.departmentCode,
+        stock: parseInt(formData.stock, 10) || 0,
         url_image: JSON.stringify(processedImageUrls),
     };
 
@@ -221,6 +230,14 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
            <div className="space-y-2">
             <Label htmlFor="slug">Slug</Label>
             <Input id="slug" value={formData.slug} onChange={(e) => setFormData((prev) => ({ ...prev, slug: e.target.value }))} placeholder="e.g., nike-air-max" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="vat">VAT</Label>
+            <Input id="vat" type="number" value={formData.vat} onChange={(e) => setFormData((prev) => ({ ...prev, vat: e.target.value }))} placeholder="e.g., 10" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="departmentCode">Department Code</Label>
+            <Input id="departmentCode" value={formData.departmentCode} onChange={(e) => setFormData((prev) => ({ ...prev, departmentCode: e.target.value }))} placeholder="e.g., DPT-001" />
           </div>
         </div>
 
@@ -352,6 +369,10 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
                     <Label htmlFor="price_promo">Promo Price</Label>
                     <Input id="price_promo" type="number" value={formData.price_promo} onChange={(e) => setFormData(p => ({ ...p, price_promo: e.target.value }))} placeholder="99000" />
                 </div>
+            </div>
+             <div className="space-y-2">
+                <Label htmlFor="stock">Stock</Label>
+                <Input id="stock" type="number" value={formData.stock} onChange={(e) => setFormData(p => ({ ...p, stock: e.target.value }))} placeholder="100" required />
             </div>
         </div>
       </div>
