@@ -1,3 +1,4 @@
+// components/salesman-table.tsx
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
@@ -13,11 +14,11 @@ import { api } from "@/lib/api"
 import type { Salesman } from "@/types"
 
 interface SalesmanTableProps {
-  key: number;
+  refreshKey: number;
   onRefresh: () => void;
 }
 
-export function SalesmanTable({ key: refreshKey, onRefresh }: SalesmanTableProps) {
+export function SalesmanTable({ refreshKey, onRefresh }: SalesmanTableProps) {
   const [editingSalesman, setEditingSalesman] = useState<Salesman | null>(null)
   const [detailSalesman, setDetailSalesman] = useState<Salesman | null>(null)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
@@ -46,7 +47,7 @@ export function SalesmanTable({ key: refreshKey, onRefresh }: SalesmanTableProps
     setDetailSalesman(salesman);
     setIsDetailOpen(true);
   };
-  
+
   const handleEdit = (salesman: Salesman) => {
     setEditingSalesman(salesman);
     setIsEditDialogOpen(true);
@@ -63,7 +64,7 @@ export function SalesmanTable({ key: refreshKey, onRefresh }: SalesmanTableProps
         }
     }
   }
-  
+
   if (isLoading) return <div className="text-center py-12">Loading salesmen...</div>;
 
   return (
@@ -122,7 +123,7 @@ export function SalesmanTable({ key: refreshKey, onRefresh }: SalesmanTableProps
           )}
         </DialogContent>
       </Dialog>
-      
+
       <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>

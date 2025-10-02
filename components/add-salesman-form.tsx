@@ -78,7 +78,7 @@ export function AddSalesmanForm({ onClose, onSave }: AddSalesmanFormProps) {
         </div>
         <div className="space-y-2">
             <Label htmlFor="store_id">Store</Label>
-            <Popover open={isStorePopoverOpen} onOpenChange={setStorePopoverOpen}>
+            <Popover open={isStorePopoverOpen} onOpenChange={setStorePopoverOpen} modal={false}>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
@@ -113,7 +113,7 @@ export function AddSalesmanForm({ onClose, onSave }: AddSalesmanFormProps) {
                               formData.store_id === store.store_code ? "opacity-100" : "opacity-0"
                             )}
                           />
-                          <span className="font-mono text-xs mr-2">{store.store_code}</span>
+                          <span className="font-mono text-xs w-16">{store.store_code}</span>
                           <span className="truncate">{store.store_name}</span>
                         </CommandItem>
                       ))}

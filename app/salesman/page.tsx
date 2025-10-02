@@ -7,7 +7,7 @@ import { Header } from "@/components/header"
 import { SalesmanTable } from "@/components/salesman-table"
 import { AddSalesmanForm } from "@/components/add-salesman-form"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog"
 import { Plus } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 
@@ -51,6 +51,9 @@ export default function SalesmanPage() {
                 <DialogContent className="max-w-lg">
                   <DialogHeader>
                     <DialogTitle className="text-foreground">Add New Salesman</DialogTitle>
+                    <DialogDescription>
+                      Select a store and fill in the details for the new salesman.
+                    </DialogDescription>
                   </DialogHeader>
                   <AddSalesmanForm
                     onClose={() => setIsAddDialogOpen(false)}
@@ -60,7 +63,7 @@ export default function SalesmanPage() {
               </Dialog>
             </div>
 
-            <SalesmanTable key={refreshKey} onRefresh={handleRefresh} />
+            <SalesmanTable refreshKey={refreshKey} onRefresh={handleRefresh} />
 
           </div>
         </main>

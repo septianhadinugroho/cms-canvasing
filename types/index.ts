@@ -1,6 +1,4 @@
 // types/index.ts
-// types/index.ts
-
 export interface Tier {
   min_quantity: number;
   price: string;
@@ -47,6 +45,8 @@ export interface Store {
   status: string | number | null;
   npwp: string | null;
   ip_address: string | null;
+  ip_pos_web: string | null;
+  cashier_id: string | null;
   created_at?: string;
   updated_at?: string;
 }

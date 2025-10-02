@@ -1,3 +1,4 @@
+// components/store-form.tsx
 "use client"
 
 import type React from "react"
@@ -30,6 +31,8 @@ export function StoreForm({ store, onClose, onSave }: StoreFormProps) {
     status: (store?.status === 0 || store?.status === 'inactive') ? 'inactive' : 'active',
     npwp: store?.npwp || "",
     ip_address: store?.ip_address || "",
+    ip_pos_web: store?.ip_pos_web || "",
+    cashier_id: store?.cashier_id || "",
   })
   const [isSaving, setIsSaving] = useState(false);
 
@@ -127,6 +130,16 @@ export function StoreForm({ store, onClose, onSave }: StoreFormProps) {
             <div className="space-y-2">
                 <Label htmlFor="ip_address">IP Address</Label>
                 <Input id="ip_address" value={formData.ip_address || ''} onChange={(e) => setFormData(p => ({ ...p, ip_address: e.target.value }))} />
+            </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+             <div className="space-y-2">
+                <Label htmlFor="ip_pos_web">IP POS Web</Label>
+                <Input id="ip_pos_web" value={formData.ip_pos_web || ''} onChange={(e) => setFormData(p => ({ ...p, ip_pos_web: e.target.value }))} />
+            </div>
+            <div className="space-y-2">
+                <Label htmlFor="cashier_id">Cashier ID</Label>
+                <Input id="cashier_id" value={formData.cashier_id || ''} onChange={(e) => setFormData(p => ({ ...p, cashier_id: e.target.value }))} />
             </div>
         </div>
 

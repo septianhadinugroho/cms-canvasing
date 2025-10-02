@@ -1,5 +1,4 @@
 // components/store-detail-view.tsx
-
 "use client"
 
 import type { Store } from "@/types";
@@ -61,6 +60,12 @@ export function StoreDetailView({ store }: StoreDetailViewProps) {
         
         <span className="text-muted-foreground">IP Address</span>
         <span className="col-span-2 font-mono">{store.ip_address || '-'}</span>
+
+        <span className="text-muted-foreground">IP POS Web</span>
+        <span className="col-span-2 font-mono">{store.ip_pos_web || '-'}</span>
+
+        <span className="text-muted-foreground">Cashier ID</span>
+        <span className="col-span-2 font-mono">{store.cashier_id || '-'}</span>
         
         <span className="text-muted-foreground">Coordinates</span>
         <span className="col-span-2 font-mono">{store.latitude || '-'}, {store.longitude || '-'}</span>
