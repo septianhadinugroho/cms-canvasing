@@ -55,7 +55,19 @@ export function Sidebar() {
             {navigation.map((item) => {
                 const isActive = pathname.startsWith(item.href) && (item.href === "/" ? pathname === "/" : true);
                 return (
-                <Link key={item.name} href={item.href} className={cn("flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors", isActive ? "bg-sidebar-primary text-sidebar-primary-foreground" : "text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent", collapsed && "justify-center")}>
+                <Link 
+                  key={item.name} 
+                  href={item.href} 
+                  className={cn(
+                    "flex items-center text-sm font-medium rounded-md transition-colors",
+                    isActive 
+                      ? "bg-sidebar-primary text-sidebar-primary-foreground" 
+                      : "text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-sidebar-accent",
+                    collapsed 
+                      ? "h-9 w-9 mx-auto justify-center" 
+                      : "px-3 py-2"
+                  )}
+                >
                     <item.icon className={cn("h-5 w-5", !collapsed && "mr-3")} />
                     {!collapsed && item.name}
                 </Link>
