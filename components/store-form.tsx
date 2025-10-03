@@ -31,7 +31,7 @@ export function StoreForm({ store, onClose, onSave }: StoreFormProps) {
     npwp: store?.npwp || "",
     ip_address: store?.ip_address || "",
     ip_pos_web: store?.ip_pos_web || "",
-    cashier_id: store?.cashier_id || "",
+    cashier_id: store?.cashier_id || "9000",
   })
   const [isSaving, setIsSaving] = useState(false);
 
@@ -143,7 +143,7 @@ export function StoreForm({ store, onClose, onSave }: StoreFormProps) {
             </div>
             <div className="space-y-2">
                 <Label htmlFor="cashier_id">Cashier ID</Label>
-                <Input id="cashier_id" value={formData.cashier_id || ''} onChange={(e) => setFormData(p => ({ ...p, cashier_id: e.target.value }))} />
+                <Input id="cashier_id" value={formData.cashier_id || ''} onChange={(e) => setFormData(p => ({ ...p, cashier_id: e.target.value }))} disabled />
             </div>
         </div>
 

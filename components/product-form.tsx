@@ -273,7 +273,7 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
                       variant="outline"
                       role="combobox"
                       aria-expanded={isCategoryPopoverOpen}
-                      className="w-full justify-between"
+                      className="w-full justify-between font-normal"
                     >
                       {formData.category_id
                         ? categories.find((cat) => cat.id.toString() === formData.category_id)?.name
@@ -290,7 +290,7 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
                           {categories.map((cat) => (
                             <CommandItem
                               key={cat.id}
-                              value={cat.name}
+                              value={`${cat.id} - ${cat.name}`} // Diubah untuk search by ID or name
                               onSelect={() => {
                                 setFormData(prev => ({ ...prev, category_id: cat.id.toString() }))
                                 setCategoryPopoverOpen(false)
@@ -302,7 +302,11 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
                                   formData.category_id === cat.id.toString() ? "opacity-100" : "opacity-0"
                                 )}
                               />
-                              {cat.name}
+                              {/* Tampilkan ID dan Nama */}
+                              <div className="flex items-center w-full">
+                                <span className="font-mono text-xs w-12 text-right mr-2 opacity-70">{cat.id}</span>
+                                <span className="truncate">{cat.name}</span>
+                              </div>
                             </CommandItem>
                           ))}
                         </CommandGroup>
@@ -321,7 +325,7 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
                       variant="outline"
                       role="combobox"
                       aria-expanded={isStorePopoverOpen}
-                      className="w-full justify-between"
+                      className="w-full justify-between font-normal"
                     >
                       {formData.store_id
                         ? stores.find((store) => store.id.toString() === formData.store_id)?.store_name
@@ -338,7 +342,7 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
                           {stores.map((store) => (
                             <CommandItem
                               key={store.id}
-                              value={store.store_name}
+                              value={`${store.id} - ${store.store_name}`} // Diubah untuk search by ID or name
                               onSelect={() => {
                                 setFormData(prev => ({ ...prev, store_id: store.id.toString() }))
                                 setStorePopoverOpen(false)
@@ -350,7 +354,11 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
                                   formData.store_id === store.id.toString() ? "opacity-100" : "opacity-0"
                                 )}
                               />
-                              {store.store_name}
+                              {/* Tampilkan ID dan Nama */}
+                              <div className="flex items-center w-full">
+                                <span className="font-mono text-xs w-12 text-right mr-2 opacity-70">{store.id}</span>
+                                <span className="truncate">{store.store_name}</span>
+                              </div>
                             </CommandItem>
                           ))}
                         </CommandGroup>

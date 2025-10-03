@@ -129,23 +129,3 @@ body {
   background: hsl(var(--background));
   color: hsl(var(--foreground));
 }
-
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  /* Ubah dari 6px menjadi 8px agar lebih mudah di-klik */
-  width: 8px; 
-}
-
-::-webkit-scrollbar-track {
-  /* Beri sedikit warna agar track-nya selalu terlihat */
-  background: hsl(var(--muted) / 0.5); 
-}
-
-::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted));
-  border-radius: 4px; /* Disesuaikan agar proporsional */
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground));
-}
