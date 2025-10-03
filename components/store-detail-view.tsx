@@ -1,4 +1,3 @@
-// components/store-detail-view.tsx
 "use client"
 
 import type { Store } from "@/types";

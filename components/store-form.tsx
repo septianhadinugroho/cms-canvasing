@@ -1,4 +1,3 @@
-// components/store-form.tsx
 "use client"
 
 import type React from "react"
@@ -37,16 +36,21 @@ export function StoreForm({ store, onClose, onSave }: StoreFormProps) {
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     setIsSaving(true);
+
+    // Konversi status dari string ke integer sebelum dikirim
+    const statusAsInteger = formData.status === 'active' ? 1 : 0;
 
     const storeDataToSave: Partial<Store> = {
       id: store?.id,
       ...formData,
       latitude: parseFloat(formData.latitude) || 0,
       longitude: parseFloat(formData.longitude) || 0,
+      status: statusAsInteger, // Gunakan nilai yang sudah dikonversi
     };
     
+    // Hapus handleUpdateStore dari sini dan panggil onSave langsung
     await onSave(storeDataToSave);
     
     setIsSaving(false);

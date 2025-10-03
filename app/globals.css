@@ -132,16 +132,18 @@ body {
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
+  /* Ubah dari 6px menjadi 8px agar lebih mudah di-klik */
+  width: 8px; 
 }
 
 ::-webkit-scrollbar-track {
-  background: hsl(var(--background));
+  /* Beri sedikit warna agar track-nya selalu terlihat */
+  background: hsl(var(--muted) / 0.5); 
 }
 
 ::-webkit-scrollbar-thumb {
   background: hsl(var(--muted));
-  border-radius: 3px;
+  border-radius: 4px; /* Disesuaikan agar proporsional */
 }
 
 ::-webkit-scrollbar-thumb:hover {

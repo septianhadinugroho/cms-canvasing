@@ -1,3 +1,5 @@
+// File: components/ui/command.tsx
+
 "use client"
 
 import * as React from "react"
@@ -7,7 +9,9 @@ import { Search } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { ScrollArea } from "@/components/ui/scroll-area" // Pastikan import ini ada
 
+// ... (kode Command, CommandDialog, CommandInput, dll. tetap sama) ...
 const Command = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive>
@@ -56,16 +60,21 @@ const CommandInput = React.forwardRef<
 
 CommandInput.displayName = CommandPrimitive.Input.displayName
 
+
+{/* ===== BAGIAN YANG DIPERBARUI ===== */}
 const CommandList = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.List>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.List>
 >(({ className, ...props }, ref) => (
-  <CommandPrimitive.List
-    ref={ref}
-    className={cn("max-h-[300px] overflow-y-auto overflow-x-hidden", className)}
-    {...props}
-  />
+  <ScrollArea className="max-h-[300px] overflow-y-auto">
+    <CommandPrimitive.List
+      ref={ref}
+      className={cn("overflow-x-hidden", className)}
+      {...props}
+    />
+  </ScrollArea>
 ))
+{/* =============================== */}
 
 CommandList.displayName = CommandPrimitive.List.displayName
 
@@ -78,6 +87,7 @@ const CommandEmpty = React.forwardRef<
 
 CommandEmpty.displayName = CommandPrimitive.Empty.displayName
 
+// ... (sisa kode command.tsx tetap sama) ...
 const CommandGroup = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Group>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Group>
