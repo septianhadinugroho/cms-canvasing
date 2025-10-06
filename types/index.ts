@@ -4,6 +4,12 @@ export interface Tier {
   price: string;
 }
 
+export interface User {
+  name: string;
+  store_code: string;
+  role: 'admin' | 'kasir'; // Ditambahkan
+}
+
 export interface Product {
   product_id: string;
   sku: string;

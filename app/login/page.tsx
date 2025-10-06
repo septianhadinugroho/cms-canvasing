@@ -9,24 +9,32 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Eye, EyeOff, LogIn } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 import { useToast } from "@/hooks/use-toast"
-import { api } from "@/lib/api"
+import { api } from "@/lib/api" // Import API dikembalikan
 
 // Definisikan tipe data user dan response sesuai backend
 interface User {
   name: string
-  store_code: string
+  store_code: string,
+  role: 'admin' | 'kasir'
 }
 
 interface LoginResponse {
-  user: User
+  user: Omit<User, 'role'> & { role?: 'admin' | 'kasir' } // Role dibuat opsional
   token: {
     token_access: string
     token_refresh: string
   }
 }
 
+// Dummy user untuk kasir
+const dummyCashier = {
+  user: { name: 'Cashier User', store_code: 'CSH-001', role: 'kasir' as 'kasir' },
+  token: { token_access: 'dummy-cashier-token', token_refresh: 'dummy-cashier-refresh' }
+};
+
+
 export default function LoginPage() {
-  const [username, setUsername] = useState("") // Diubah menjadi username
+  const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
@@ -37,16 +45,31 @@ export default function LoginPage() {
     e.preventDefault()
     setIsLoading(true)
 
+    // Logika untuk login dummy kasir
+    if (username === 'kasir' && password === 'kasir') {
+      setTimeout(() => {
+        const response = dummyCashier;
+        auth.login(response.token.token_access, response.user)
+        toast({
+          title: "Login Berhasil!",
+          description: `Selamat datang kembali, ${response.user.name}.`,
+        })
+        setIsLoading(false)
+      }, 1000);
+      return; // Hentikan eksekusi lebih lanjut
+    }
+
+    // Logika untuk login admin via API
     try {
-      // Panggil API login dari backend
-      const response = await api.post<LoginResponse>("/auth/login-cms", {
-        username, // Key disesuaikan menjadi 'username'
+      const response = await api.post<LoginResponse>("/auth/login", {
+        username,
         password,
       })
       
       if (response.token && response.user) {
-        // Panggil fungsi login dari AuthContext dengan data dari backend
-        auth.login(response.token.token_access, response.user)
+        // Default role ke 'admin' jika tidak ada dari API
+        const userWithRole = { ...response.user, role: response.user.role || 'admin' as const };
+        auth.login(response.token.token_access, userWithRole)
         toast({
           title: "Login Berhasil!",
           description: `Selamat datang kembali, ${response.user.name}.`,
@@ -80,7 +103,7 @@ export default function LoginPage() {
               </Label>
               <Input
                 id="username"
-                type="text" // Type text untuk username
+                type="text"
                 placeholder="Masukkan username Anda"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}

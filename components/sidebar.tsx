@@ -14,23 +14,30 @@ import {
   LogOut,
   Image as BannerIcon,
   Users,
-  User, // Ikon baru untuk Customers
+  User,
+  History, // Ikon baru
 } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 
-const navigation = [
+const adminNavigation = [
   { name: "Dashboard", href: "/", icon: LayoutDashboard },
   { name: "Products", href: "/products", icon: Package },
   { name: "Banners", href: "/banners", icon: BannerIcon },
   { name: "Stores", href: "/stores", icon: Store },
   { name: "Salesman", href: "/salesman", icon: Users },
-  { name: "Customers", href: "/customers", icon: User }, // Menu Customers ditambahkan
+  { name: "Customers", href: "/customers", icon: User },
+]
+
+const cashierNavigation = [
+  { name: "Sales History", href: "/sales-history", icon: History },
 ]
 
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false)
   const pathname = usePathname()
   const { logout, user } = useAuth()
+
+  const navigation = user?.role === 'kasir' ? cashierNavigation : adminNavigation;
 
   return (
     <div
@@ -79,6 +86,7 @@ export function Sidebar() {
             <div className="mb-3">
               <p className="text-xs text-sidebar-foreground/70">Logged in as:</p>
               <p className="text-sm font-medium text-sidebar-foreground truncate">{user?.name || "User"}</p>
+              <p className="text-xs font-mono text-sidebar-foreground/70">{user?.role}</p>
             </div>
           )}
           <Button

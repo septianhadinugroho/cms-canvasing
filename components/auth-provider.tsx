@@ -4,10 +4,10 @@ import type React from "react"
 import { createContext, useContext, useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
 
-// Bentuk data user disesuaikan dengan response API
 interface User {
   name: string
   store_code: string
+  role: 'admin' | 'kasir'
 }
 
 interface AuthContextType {
@@ -28,16 +28,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const checkAuth = () => {
-      // Kita cek keberadaan token
       const token = localStorage.getItem("accessToken")
       const userData = localStorage.getItem("userData")
 
       if (token && userData) {
+        const parsedUser = JSON.parse(userData);
         setIsAuthenticated(true)
-        setUser(JSON.parse(userData))
+        setUser(parsedUser)
+        // Set cookies for middleware
+        document.cookie = `token=${token}; path=/`;
+        document.cookie = `userData=${JSON.stringify(parsedUser)}; path=/`;
       } else {
         setIsAuthenticated(false)
         setUser(null)
+        // Clear cookies
+        document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+        document.cookie = 'userData=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
         if (pathname !== "/login") {
           router.push("/login")
         }
@@ -49,17 +55,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [router, pathname])
 
   const login = (token: string, userData: User) => {
-    // Simpan token dan data user ke localStorage
     localStorage.setItem("accessToken", token)
     localStorage.setItem("userData", JSON.stringify(userData))
+    // Set cookies for middleware
+    document.cookie = `token=${token}; path=/`;
+    document.cookie = `userData=${JSON.stringify(userData)}; path=/`;
     setIsAuthenticated(true)
     setUser(userData)
-    router.push("/") // Arahkan ke dashboard setelah login
+    // Redirect based on role
+    if (userData.role === 'kasir') {
+      router.push("/sales-history");
+    } else {
+      router.push("/");
+    }
   }
 
   const logout = () => {
     localStorage.removeItem("accessToken")
     localStorage.removeItem("userData")
+    // Clear cookies
+    document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
+    document.cookie = 'userData=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
     setIsAuthenticated(false)
     setUser(null)
     router.push("/login")
