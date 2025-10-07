@@ -44,24 +44,6 @@ export default function ProductsPage() {
                 <h1 className="text-3xl font-semibold text-foreground mb-2">Product Management</h1>
                 <p className="text-muted-foreground">Manage all your products, SKUs, and inventory</p>
               </div>
-
-              <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Product
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-3xl">
-                  <DialogHeader>
-                    <DialogTitle className="text-foreground">Add New Product</DialogTitle>
-                  </DialogHeader>
-                  <ProductForm 
-                    onClose={() => setIsAddDialogOpen(false)} 
-                    onSave={handleSave}
-                  />
-                </DialogContent>
-              </Dialog>
             </div>
 
             <div className="bg-card border border-border rounded-lg p-4 mb-6">

@@ -16,6 +16,7 @@ import {
   Users,
   User,
   History, // Ikon baru
+  UserSquare,
 } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 
@@ -25,6 +26,7 @@ const adminNavigation = [
   { name: "Banners", href: "/banners", icon: BannerIcon },
   { name: "Stores", href: "/stores", icon: Store },
   { name: "Salesman", href: "/salesman", icon: Users },
+  { name: "Cashiers", href: "/cashiers", icon: UserSquare },
   { name: "Customers", href: "/customers", icon: User },
 ]
 

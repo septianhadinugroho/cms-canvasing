@@ -105,3 +105,11 @@ export interface Category {
   name: string;
   slug: string;
 }
+
+export interface Cashier {
+  id: string;
+  name: string;
+  username: string;
+  store_code: string;
+  role: 'kasir';
+}
