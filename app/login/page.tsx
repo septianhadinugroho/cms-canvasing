@@ -9,29 +9,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Eye, EyeOff, LogIn } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
 import { useToast } from "@/hooks/use-toast"
-import { api } from "@/lib/api" // Import API dikembalikan
+import { api } from "@/lib/api" 
 
-// Definisikan tipe data user dan response sesuai backend
 interface User {
   name: string
   store_code: string,
-  role: 'admin' | 'kasir'
+  role: 'ADMIN' | 'SALESMAN' | 'CASHIER'
 }
 
 interface LoginResponse {
-  user: Omit<User, 'role'> & { role?: 'admin' | 'kasir' } // Role dibuat opsional
+  user: User
   token: {
     token_access: string
     token_refresh: string
   }
 }
-
-// Dummy user untuk kasir
-const dummyCashier = {
-  user: { name: 'Cashier User', store_code: 'CSH-001', role: 'kasir' as 'kasir' },
-  token: { token_access: 'dummy-cashier-token', token_refresh: 'dummy-cashier-refresh' }
-};
-
 
 export default function LoginPage() {
   const [username, setUsername] = useState("")
@@ -45,21 +37,6 @@ export default function LoginPage() {
     e.preventDefault()
     setIsLoading(true)
 
-    // Logika untuk login dummy kasir
-    if (username === 'kasir' && password === 'kasir') {
-      setTimeout(() => {
-        const response = dummyCashier;
-        auth.login(response.token.token_access, response.user)
-        toast({
-          title: "Login Berhasil!",
-          description: `Selamat datang kembali, ${response.user.name}.`,
-        })
-        setIsLoading(false)
-      }, 1000);
-      return; // Hentikan eksekusi lebih lanjut
-    }
-
-    // Logika untuk login admin via API
     try {
       const response = await api.post<LoginResponse>("/auth/login", {
         username,
@@ -67,18 +44,16 @@ export default function LoginPage() {
       })
       
       if (response.token && response.user) {
-        // Default role ke 'admin' jika tidak ada dari API
-        const userWithRole = { ...response.user, role: response.user.role || 'admin' as const };
-        auth.login(response.token.token_access, userWithRole)
+        auth.login(response.token.token_access, response.user)
         toast({
-          title: "Login Berhasil!",
-          description: `Selamat datang kembali, ${response.user.name}.`,
+          title: "Login Successful!",
+          description: `Welcome back, ${response.user.name}.`,
         })
       }
     } catch (error: any) {
       toast({
-        title: "Login Gagal",
-        description: error.message || "Username atau password salah.",
+        title: "Login Failed",
+        description: error.message || "Invalid username or password.",
         variant: "destructive",
       })
     } finally {
@@ -92,7 +67,7 @@ export default function LoginPage() {
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center text-foreground">Canvasing CMS</CardTitle>
           <CardDescription className="text-center text-muted-foreground">
-            Masuk ke dashboard untuk mengelola produk dan toko
+            Sign in to manage products and stores
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -104,7 +79,7 @@ export default function LoginPage() {
               <Input
                 id="username"
                 type="text"
-                placeholder="Masukkan username Anda"
+                placeholder="Enter your username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
@@ -119,7 +94,7 @@ export default function LoginPage() {
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Masukkan password"
+                  placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -140,12 +115,12 @@ export default function LoginPage() {
               {isLoading ? (
                 <div className="flex items-center">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground mr-2"></div>
-                  Masuk...
+                  Signing In...
                 </div>
               ) : (
                 <div className="flex items-center">
                   <LogIn className="h-4 w-4 mr-2" />
-                  Masuk
+                  Sign In
                 </div>
               )}
             </Button>

@@ -15,7 +15,7 @@ import {
   Image as BannerIcon,
   Users,
   User,
-  History, // Ikon baru
+  History, 
   UserSquare,
 } from "lucide-react"
 import { useAuth } from "@/components/auth-provider"
@@ -30,6 +30,13 @@ const adminNavigation = [
   { name: "Customers", href: "/customers", icon: User },
 ]
 
+const salesmanNavigation = [
+  { name: "Products", href: "/products", icon: Package },
+  { name: "Stores", href: "/stores", icon: Store },
+  { name: "Customers", href: "/customers", icon: User },
+  { name: "Banners", href: "/banners", icon: BannerIcon },
+]
+
 const cashierNavigation = [
   { name: "Sales History", href: "/sales-history", icon: History },
 ]
@@ -39,7 +46,20 @@ export function Sidebar() {
   const pathname = usePathname()
   const { logout, user } = useAuth()
 
-  const navigation = user?.role === 'kasir' ? cashierNavigation : adminNavigation;
+  const getNavigation = () => {
+    switch (user?.role) {
+      case 'ADMIN':
+        return adminNavigation;
+      case 'SALESMAN':
+        return salesmanNavigation;
+      case 'CASHIER':
+        return cashierNavigation;
+      default:
+        return [];
+    }
+  }
+
+  const navigation = getNavigation();
 
   return (
     <div

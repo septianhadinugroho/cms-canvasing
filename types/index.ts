@@ -7,7 +7,7 @@ export interface Tier {
 export interface User {
   name: string;
   store_code: string;
-  role: 'admin' | 'kasir'; // Ditambahkan
+  role: 'ADMIN' | 'SALESMAN' | 'CASHIER';
 }
 
 export interface Product {
@@ -34,7 +34,6 @@ export type ProductFormData = Omit<Product, 'product_id' | 'name_category' | 'pr
   price: number;
   price_promo?: number;
 };
-
 
 export type BannerImages = string[];
 
@@ -86,7 +85,6 @@ export interface Salesman {
   enabled?: "Y" | "N";
 }
 
-// Tipe baru untuk Customer
 export interface Customer {
   id: number;
   customer_name: string;
@@ -112,4 +110,21 @@ export interface Cashier {
   username: string;
   store_code: string;
   role: 'kasir';
+}
+
+// Order types for Sales History Page
+export interface Order {
+  orderNumber: string;
+  status: string;
+  amount: number;
+  customerName: string;
+  items: { product_name: string; quantity: number; price: number }[];
+}
+
+export interface ApiOrder {
+  order_number: string;
+  status: number;
+  total_amount: number;
+  customer_name: string;
+  items: { product_name: string; quantity: number; price: number }[];
 }

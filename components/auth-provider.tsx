@@ -7,7 +7,7 @@ import { useRouter, usePathname } from "next/navigation"
 interface User {
   name: string
   store_code: string
-  role: 'admin' | 'kasir'
+  role: 'ADMIN' | 'SALESMAN' | 'CASHIER'
 }
 
 interface AuthContextType {
@@ -63,10 +63,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsAuthenticated(true)
     setUser(userData)
     // Redirect based on role
-    if (userData.role === 'kasir') {
-      router.push("/sales-history");
-    } else {
-      router.push("/");
+    switch (userData.role) {
+      case 'ADMIN':
+        router.push("/");
+        break;
+      case 'SALESMAN':
+        router.push("/products");
+        break;
+      case 'CASHIER':
+        router.push("/sales-history");
+        break;
+      default:
+        router.push("/");
+        break;
     }
   }
 

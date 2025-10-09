@@ -27,16 +27,21 @@ export function middleware(request: NextRequest) {
   }
 
   if (user) {
-    if (user.role === 'kasir') {
+    if (user.role === 'CASHIER') {
       // Cashier can only access /sales-history and is redirected there from /
       if (pathname !== '/sales-history') {
         return NextResponse.redirect(new URL('/sales-history', request.url));
       }
-    } else if (user.role === 'admin') {
+    } else if (user.role === 'ADMIN') {
       // Admin is redirected away from /sales-history
       if (pathname === '/sales-history') {
         return NextResponse.redirect(new URL('/', request.url));
       }
+    } else if (user.role === 'SALESMAN') {
+        // Salesman is redirected to products page from /
+        if (pathname === '/') {
+            return NextResponse.redirect(new URL('/products', request.url));
+        }
     }
   }
 
