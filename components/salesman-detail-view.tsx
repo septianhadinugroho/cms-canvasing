@@ -1,67 +1,45 @@
-// components/sales-order-detail.tsx
-import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ApiOrder } from "@/types"; // Import ApiOrder
+"use client"
 
-interface SalesOrderDetailProps {
-  order: ApiOrder;
-  statusText: string;
+import type { Salesman } from "@/types";
+
+interface SalesmanDetailViewProps {
+  salesman: Salesman;
 }
 
-export function SalesOrderDetail({ order, statusText }: SalesOrderDetailProps) {
+export function SalesmanDetailView({ salesman }: SalesmanDetailViewProps) {
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <p className="text-sm text-muted-foreground">Order Number</p>
-          <p className="font-mono">{order.order_number}</p>
-        </div>
-        <div>
-          <p className="text-sm text-muted-foreground">Status</p>
-          <Badge
-            variant={
-              statusText === "Paid" ? "default" : statusText === "Pending" ? "secondary" : "destructive"
-            }
-          >
-            {statusText}
-          </Badge>
-        </div>
-        <div>
-          <p className="text-sm text-muted-foreground">Customer</p>
-          {/* Menggunakan properti snake_case langsung */}
-          <p>{order.customer_name}</p>
-        </div>
-        <div>
-          <p className="text-sm text-muted-foreground">Total Amount</p>
-          <p className="font-semibold">
-            Rp {order.total_amount.toLocaleString("id-ID")}
-          </p>
-        </div>
-      </div>
-      <div>
-        <p className="text-sm text-muted-foreground mb-2">Items</p>
-        <div className="border rounded-lg">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Product</TableHead>
-                <TableHead className="text-center">Quantity</TableHead>
-                <TableHead className="text-right">Price</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {order.items.map((item, index) => (
-                <TableRow key={index}>
-                  <TableCell>{item.product_name}</TableCell>
-                  <TableCell className="text-center">{item.quantity}</TableCell>
-                  <TableCell className="text-right">
-                    Rp {item.price.toLocaleString("id-ID")}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+    <div className="space-y-4 p-2">
+      <h3 className="font-semibold text-lg">{salesman.name}</h3>
+      <div className="grid grid-cols-3 gap-x-4 gap-y-2 text-sm">
+        <span className="text-muted-foreground">ID</span>
+        <span className="col-span-2 font-mono">{salesman.id}</span>
+        
+        <span className="text-muted-foreground">Username</span>
+        <span className="col-span-2 font-mono">{salesman.username}</span>
+
+        <span className="text-muted-foreground">Store Name</span>
+        <span className="col-span-2">{salesman.store_name}</span>
+        
+        <span className="text-muted-foreground">Store Code</span>
+        <span className="col-span-2 font-mono">{salesman.store_code}</span>
+        
+        <span className="text-muted-foreground">Address</span>
+        <span className="col-span-2">{salesman.address || '-'}</span>
+
+        <span className="text-muted-foreground">MID</span>
+        <span className="col-span-2 font-mono">{salesman.mid || '-'}</span>
+        
+        <span className="text-muted-foreground">TID</span>
+        <span className="col-span-2 font-mono">{salesman.tid || '-'}</span>
+
+        <span className="text-muted-foreground">Hotline</span>
+        <span className="col-span-2 font-mono">{salesman.hotline || '-'}</span>
+
+        <span className="text-muted-foreground">MAC Address</span>
+        <span className="col-span-2 font-mono">{salesman.mac_address || '-'}</span>
+
+        <span className="text-muted-foreground">NPWP</span>
+        <span className="col-span-2 font-mono">{salesman.npwp || '-'}</span>
       </div>
     </div>
   );
