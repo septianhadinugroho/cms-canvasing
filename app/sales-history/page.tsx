@@ -15,7 +15,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { SalesOrderDetail } from "@/components/sales-order-detail";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
-import { ApiOrder } from "@/types"; // <-- Impor dari tipe global
+import { ApiOrder } from "@/types"; // Kita hanya butuh ApiOrder
+
+// Definisikan tipe untuk respons endpoint ini secara spesifik
+interface SalesHistoryResponse {
+  items: ApiOrder[];
+  // Anda bisa menambahkan 'pagination' di sini jika perlu
+}
 
 export default function SalesHistoryPage() {
   const { isAuthenticated, user } = useAuth();
@@ -27,13 +33,24 @@ export default function SalesHistoryPage() {
     if (isAuthenticated && user?.role === 'CASHIER') {
       fetchOrders();
     }
-  }, [isAuthenticated, user, toast]);
+  }, [isAuthenticated, user]);
 
   const fetchOrders = async () => {
     try {
-      const response = await api.get<{ data: { items: ApiOrder[] } }>("/cashier/orders");
-      setSalesHistory(response.data.items);
+      // PERBAIKAN 1: Tentukan tipe respons yang benar
+      const response = await api.get<SalesHistoryResponse>("/cashier/orders");
+
+      // PERBAIKAN 2: Akses 'items' secara langsung dari objek respons
+      const items = response?.items;
+
+      if (items && Array.isArray(items)) {
+        setSalesHistory(items);
+      } else {
+        console.warn("API response is valid, but 'items' array is missing or not an array.", response);
+        setSalesHistory([]);
+      }
     } catch (error: any) {
+      console.error("Failed to fetch sales history:", error);
       toast({
         title: "Error",
         description: `Failed to fetch sales history: ${error.message}`,
@@ -49,7 +66,7 @@ export default function SalesHistoryPage() {
         title: "Success",
         description: `Order ${orderNumber} has been marked as paid.`,
       });
-      fetchOrders(); // Reload data after success
+      fetchOrders(); // Reload data setelah sukses
     } catch (error: any) {
       toast({
         title: "Error",
@@ -84,69 +101,77 @@ export default function SalesHistoryPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {salesHistory.map((order) => (
-                      <TableRow key={order.order_number}>
-                        <TableCell className="font-mono">{order.order_number}</TableCell>
-                        <TableCell>{order.customer_name}</TableCell>
-                        <TableCell>{order.order_date}</TableCell>
-                        <TableCell>Rp {order.total_amount.toLocaleString('id-ID')}</TableCell>
-                        <TableCell>{order.payment_source}</TableCell>
-                        <TableCell>
-                          <Badge variant={order.status === 'PAID' ? 'default' : order.status === 'PENDING' ? 'secondary' : 'destructive'}>
-                            {order.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {(order.status === 'UNPAID' || order.status === 'PENDING') && (
-                            <AlertDialog>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <AlertDialogTrigger asChild>
-                                    <Button variant="ghost" size="icon">
-                                      <CheckCircle className="h-5 w-5 text-green-500" />
-                                    </Button>
-                                  </AlertDialogTrigger>
-                                </TooltipTrigger>
-                                <TooltipContent><p>Mark as Paid</p></TooltipContent>
-                              </Tooltip>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                  <AlertDialogDescription>This action will mark order {order.order_number} as paid.</AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction onClick={() => handleMarkAsPaid(order.order_number)}>Continue</AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          )}
-                           <Dialog onOpenChange={(open) => !open && setSelectedOrder(null)}>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                   <DialogTrigger asChild>
-                                    <Button variant="ghost" size="icon" onClick={() => setSelectedOrder(order)}>
-                                      <Eye className="h-5 w-5" />
-                                    </Button>
-                                  </DialogTrigger>
-                                </TooltipTrigger>
-                                <TooltipContent><p>View Details</p></TooltipContent>
-                              </Tooltip>
-                               <DialogContent>
-                                <DialogHeader>
-                                  <DialogTitle>Order Details</DialogTitle>
-                                </DialogHeader>
-                                 {selectedOrder && (
-                                   <SalesOrderDetail
-                                      order={selectedOrder}
-                                      statusText={selectedOrder.status}
-                                   />
-                                  )}
-                              </DialogContent>
-                            </Dialog>
+                    {salesHistory.length > 0 ? (
+                      salesHistory.map((order) => (
+                        <TableRow key={order.order_number}>
+                          <TableCell className="font-mono">{order.order_number}</TableCell>
+                          <TableCell>{order.customer_name}</TableCell>
+                          <TableCell>{order.order_date}</TableCell>
+                          <TableCell>Rp {order.total_amount.toLocaleString('id-ID')}</TableCell>
+                          <TableCell>{order.payment_source}</TableCell>
+                          <TableCell>
+                            <Badge variant={order.status === 'PAID' ? 'default' : order.status === 'PENDING' ? 'secondary' : 'destructive'}>
+                              {order.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {(order.status === 'UNPAID' || order.status === 'PENDING') && (
+                              <AlertDialog>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <AlertDialogTrigger asChild>
+                                      <Button variant="ghost" size="icon">
+                                        <CheckCircle className="h-5 w-5 text-green-500" />
+                                      </Button>
+                                    </AlertDialogTrigger>
+                                  </TooltipTrigger>
+                                  <TooltipContent><p>Mark as Paid</p></TooltipContent>
+                                </Tooltip>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                    <AlertDialogDescription>This action will mark order {order.order_number} as paid.</AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => handleMarkAsPaid(order.order_number)}>Continue</AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            )}
+                             <Dialog onOpenChange={(open) => !open && setSelectedOrder(null)}>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                     <DialogTrigger asChild>
+                                      <Button variant="ghost" size="icon" onClick={() => setSelectedOrder(order)}>
+                                        <Eye className="h-5 w-5" />
+                                      </Button>
+                                    </DialogTrigger>
+                                  </TooltipTrigger>
+                                  <TooltipContent><p>View Details</p></TooltipContent>
+                                </Tooltip>
+                                 <DialogContent>
+                                  <DialogHeader>
+                                    <DialogTitle>Order Details</DialogTitle>
+                                  </DialogHeader>
+                                   {selectedOrder && (
+                                     <SalesOrderDetail
+                                        order={selectedOrder}
+                                        statusText={selectedOrder.status}
+                                     />
+                                    )}
+                                </DialogContent>
+                              </Dialog>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center">
+                          No sales history found.
                         </TableCell>
                       </TableRow>
-                    ))}
+                    )}
                   </TableBody>
                 </Table>
               </div>

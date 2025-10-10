@@ -122,6 +122,20 @@ interface ApiOrderItem {
   percentage: number;
 }
 
+export interface ApiResponse<T> {
+  status: string;
+  data: {
+    items: T[];
+    pagination?: {
+      totalData: number;
+      totalPages: number;
+      currentPage: number;
+      perPage: number;
+    };
+  };
+  error: null | any;
+}
+
 export interface ApiOrder {
   order_date: string;
   order_number: string;
