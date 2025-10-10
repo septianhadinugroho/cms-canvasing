@@ -2,20 +2,20 @@
 "use client"
 
 import { useState, useEffect } from "react";
-import { Sidebar } from "@/components/sidebar"
-import { Header } from "@/components/header"
-import { useAuth } from "@/components/auth-provider"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Eye, CheckCircle } from "lucide-react"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Sidebar } from "@/components/sidebar";
+import { Header } from "@/components/header";
+import { useAuth } from "@/components/auth-provider";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Eye, CheckCircle } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { SalesOrderDetail } from "@/components/sales-order-detail";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
-import { ApiOrder } from "@/types";
+import { ApiOrder } from "@/types"; // <-- Impor dari tipe global
 
 export default function SalesHistoryPage() {
   const { isAuthenticated, user } = useAuth();
@@ -31,8 +31,8 @@ export default function SalesHistoryPage() {
 
   const fetchOrders = async () => {
     try {
-      const response = await api.get<{ items: ApiOrder[] }>("/cashier/orders");
-      setSalesHistory(response.items);
+      const response = await api.get<{ data: { items: ApiOrder[] } }>("/cashier/orders");
+      setSalesHistory(response.data.items);
     } catch (error: any) {
       toast({
         title: "Error",
@@ -49,23 +49,13 @@ export default function SalesHistoryPage() {
         title: "Success",
         description: `Order ${orderNumber} has been marked as paid.`,
       });
-      fetchOrders(); // Muat ulang data setelah berhasil
+      fetchOrders(); // Reload data after success
     } catch (error: any) {
       toast({
         title: "Error",
         description: `Failed to update order status: ${error.message}`,
         variant: "destructive",
       });
-    }
-  };
-
-  const getStatusText = (status: number) => {
-    switch (status) {
-      case 0: return 'Unpaid';
-      case 1: return 'Pending';
-      case 2: return 'Paid';
-      case 3: return 'Cancelled';
-      default: return 'Unknown';
     }
   };
 
@@ -85,7 +75,10 @@ export default function SalesHistoryPage() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Order Number</TableHead>
+                      <TableHead>Customer</TableHead>
+                      <TableHead>Order Date</TableHead>
                       <TableHead>Amount</TableHead>
+                      <TableHead>Payment</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead className="text-right">Action</TableHead>
                     </TableRow>
@@ -94,14 +87,17 @@ export default function SalesHistoryPage() {
                     {salesHistory.map((order) => (
                       <TableRow key={order.order_number}>
                         <TableCell className="font-mono">{order.order_number}</TableCell>
+                        <TableCell>{order.customer_name}</TableCell>
+                        <TableCell>{order.order_date}</TableCell>
                         <TableCell>Rp {order.total_amount.toLocaleString('id-ID')}</TableCell>
+                        <TableCell>{order.payment_source}</TableCell>
                         <TableCell>
-                          <Badge variant={ getStatusText(order.status) === 'Paid' ? 'default' : getStatusText(order.status) === 'Pending' ? 'secondary' : 'destructive' }>
-                            {getStatusText(order.status)}
+                          <Badge variant={order.status === 'PAID' ? 'default' : order.status === 'PENDING' ? 'secondary' : 'destructive'}>
+                            {order.status}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
-                          {getStatusText(order.status) === 'Pending' && (
+                          {(order.status === 'UNPAID' || order.status === 'PENDING') && (
                             <AlertDialog>
                               <Tooltip>
                                 <TooltipTrigger asChild>
@@ -141,9 +137,9 @@ export default function SalesHistoryPage() {
                                   <DialogTitle>Order Details</DialogTitle>
                                 </DialogHeader>
                                  {selectedOrder && (
-                                   <SalesOrderDetail 
-                                      order={selectedOrder} 
-                                      statusText={getStatusText(selectedOrder.status)} 
+                                   <SalesOrderDetail
+                                      order={selectedOrder}
+                                      statusText={selectedOrder.status}
                                    />
                                   )}
                               </DialogContent>

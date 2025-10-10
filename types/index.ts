@@ -92,6 +92,7 @@ export interface Customer {
   email: string;
   phone: string;
   store_id: number;
+  store_name?: string;
   created_at: string;
   updated_at: string;
   latitude: string;
@@ -112,19 +113,28 @@ export interface Cashier {
   role: 'kasir';
 }
 
-// Order types for Sales History Page
-export interface Order {
-  orderNumber: string;
-  status: string;
-  amount: number;
-  customerName: string;
-  items: { product_name: string; quantity: number; price: number }[];
+interface ApiOrderItem {
+  sku: string;
+  barcode: string;
+  product_name: string;
+  quantity: number;
+  price: string;
+  percentage: number;
 }
 
 export interface ApiOrder {
+  order_date: string;
   order_number: string;
-  status: number;
-  total_amount: number;
   customer_name: string;
-  items: { product_name: string; quantity: number; price: number }[];
+  customer_phone: string;
+  customer_email: string;
+  customer_address: string;
+  store_id: number;
+  delivery_type: string;
+  payment_source: string;
+  status: string; // Status sudah benar string
+  voucher: any[];
+  items: ApiOrderItem[];
+  total_amount: number;
+  grand_total: number;
 }
