@@ -33,7 +33,17 @@ export function SalesOrderDetail({ order, statusText }: SalesOrderDetailProps) {
           <p>{order.payment_source}</p>
           <p className="text-muted-foreground">Status:</p>
           <p>
-            <Badge variant={statusText === 'PAID' ? 'default' : statusText === 'PENDING' ? 'secondary' : 'destructive'}>
+            <Badge
+              variant={
+                statusText === 'COMPLETED' || statusText === 'PAID'
+                  ? 'success'
+                  : statusText === 'PENDING CASHIER' || statusText === 'PENDING' || statusText === 'UNPAID'
+                  ? 'warning'
+                  : statusText === 'CANCELLED'
+                  ? 'destructive'
+                  : 'secondary'
+              }
+            >
               {statusText}
             </Badge>
           </p>

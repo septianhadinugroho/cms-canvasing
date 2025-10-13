@@ -110,12 +110,22 @@ export default function SalesHistoryPage() {
                           <TableCell>Rp {order.total_amount.toLocaleString('id-ID')}</TableCell>
                           <TableCell>{order.payment_source}</TableCell>
                           <TableCell>
-                            <Badge variant={order.status === 'PAID' ? 'default' : order.status === 'PENDING' ? 'secondary' : 'destructive'}>
+                            <Badge
+                              variant={
+                                order.status === 'COMPLETED' || order.status === 'PAID'
+                                  ? 'success'
+                                  : order.status === 'PENDING CASHIER' || order.status === 'PENDING' || order.status === 'UNPAID'
+                                  ? 'warning'
+                                  : order.status === 'CANCELLED'
+                                  ? 'destructive'
+                                  : 'secondary'
+                              }
+                            >
                               {order.status}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-right">
-                            {(order.status === 'UNPAID' || order.status === 'PENDING') && (
+                            {(order.status === 'UNPAID' || order.status === 'PENDING' || order.status === 'PENDING CASHIER') && (
                               <AlertDialog>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
