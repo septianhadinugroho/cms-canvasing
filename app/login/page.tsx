@@ -44,11 +44,19 @@ export default function LoginPage() {
       })
       
       if (response.token && response.user) {
-        auth.login(response.token.token_access, response.user)
-        toast({
-          title: "Login Successful!",
-          description: `Welcome back, ${response.user.name}.`,
-        })
+        if (response.user.role === 'SALESMAN') {
+          toast({
+            title: "Login Failed",
+            description: "Salesman can't access CMS.",
+            variant: "destructive",
+          })
+        } else {
+          auth.login(response.token.token_access, response.user)
+          toast({
+            title: "Login Successful!",
+            description: `Welcome back, ${response.user.name}.`,
+          })
+        }
       }
     } catch (error: any) {
       toast({

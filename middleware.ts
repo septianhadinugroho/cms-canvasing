@@ -38,9 +38,9 @@ export function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL('/', request.url));
       }
     } else if (user.role === 'SALESMAN') {
-        // Salesman is redirected to products page from /
-        if (pathname === '/') {
-            return NextResponse.redirect(new URL('/products', request.url));
+        // Salesman is redirected to login page from /
+        if (pathname !== '/login') {
+            return NextResponse.redirect(new URL('/login', request.url));
         }
     }
   }
