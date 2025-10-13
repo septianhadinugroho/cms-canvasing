@@ -9,6 +9,7 @@ export default function CustomersPage() {
   const { isAuthenticated } = useAuth()
     
   if (!isAuthenticated) {
+    // Bisa redirect atau menampilkan loading state di sini jika perlu
     return null
   }
 
@@ -26,6 +27,7 @@ export default function CustomersPage() {
               </div>
             </div>
             
+            {/* CustomersTable sekarang sudah benar dan bisa dipanggil langsung */}
             <CustomersTable />
 
           </div>

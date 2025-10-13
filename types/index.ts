@@ -97,6 +97,7 @@ export interface Customer {
   updated_at: string;
   latitude: string;
   longitude: string;
+  enabled: "1" | "0" | null;
 }
 
 export interface Category {
