@@ -113,9 +113,9 @@ export default function SalesHistoryPage() {
                             <Badge
                               variant={
                                 order.status === 'COMPLETED' || order.status === 'PAID'
-                                  ? 'success'
+                                  ? 'default'
                                   : order.status === 'PENDING CASHIER' || order.status === 'PENDING' || order.status === 'UNPAID'
-                                  ? 'warning'
+                                  ? 'destructive'
                                   : order.status === 'CANCELLED'
                                   ? 'destructive'
                                   : 'secondary'

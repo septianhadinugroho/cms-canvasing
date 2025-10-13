@@ -36,9 +36,9 @@ export function SalesOrderDetail({ order, statusText }: SalesOrderDetailProps) {
             <Badge
               variant={
                 statusText === 'COMPLETED' || statusText === 'PAID'
-                  ? 'success'
+                  ? 'default'
                   : statusText === 'PENDING CASHIER' || statusText === 'PENDING' || statusText === 'UNPAID'
-                  ? 'warning'
+                  ? 'destructive'
                   : statusText === 'CANCELLED'
                   ? 'destructive'
                   : 'secondary'
