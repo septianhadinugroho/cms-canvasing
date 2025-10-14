@@ -19,8 +19,8 @@ export function SalesOrderDetail({ order, statusText }: SalesOrderDetailProps) {
           <p className="text-muted-foreground">Phone:</p>
           <p>{order.customer_phone}</p>
           <p className="text-muted-foreground">Address:</p>
-          {/* PERBAIKAN UTAMA: Ganti `customer_address` menjadi `address` */}
-          <p>{order.address || 'Tidak ada alamat'}</p>
+          {/* PERBAIKAN UTAMA: Ganti `order.address` menjadi `order.customer_address` */}
+          <p>{order.customer_address || 'Tidak ada alamat'}</p>
         </div>
       </div>
       <div>

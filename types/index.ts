@@ -161,7 +161,8 @@ export interface ApiOrder {
   customer_name: string;
   customer_phone: string;
   customer_email: string;
-  address: string;
+  // address: string;
+  customer_address: string; 
   store_id: number;
   delivery_type: string;
   payment_source: string;
