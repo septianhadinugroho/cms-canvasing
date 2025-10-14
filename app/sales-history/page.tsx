@@ -15,12 +15,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { SalesOrderDetail } from "@/components/sales-order-detail";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
-import { ApiOrder } from "@/types"; // Kita hanya butuh ApiOrder
+import { ApiOrder } from "@/types";
 
-// Definisikan tipe untuk respons endpoint ini secara spesifik
 interface SalesHistoryResponse {
   items: ApiOrder[];
-  // Anda bisa menambahkan 'pagination' di sini jika perlu
 }
 
 export default function SalesHistoryPage() {
@@ -37,16 +35,14 @@ export default function SalesHistoryPage() {
 
   const fetchOrders = async () => {
     try {
-      // PERBAIKAN 1: Tentukan tipe respons yang benar
       const response = await api.get<SalesHistoryResponse>("/cashier/orders");
+      // Safely access the 'items' property and provide a fallback empty array
+      const items = response?.items ?? [];
 
-      // PERBAIKAN 2: Akses 'items' secara langsung dari objek respons
-      const items = response?.items;
-
-      if (items && Array.isArray(items)) {
+      if (Array.isArray(items)) {
         setSalesHistory(items);
       } else {
-        console.warn("API response is valid, but 'items' array is missing or not an array.", response);
+        console.warn("API response is valid, but 'items' is not an array.", response);
         setSalesHistory([]);
       }
     } catch (error: any) {
@@ -56,6 +52,7 @@ export default function SalesHistoryPage() {
         description: `Failed to fetch sales history: ${error.message}`,
         variant: "destructive",
       });
+       setSalesHistory([]); // Ensure salesHistory is an array even on error
     }
   };
 
@@ -66,7 +63,7 @@ export default function SalesHistoryPage() {
         title: "Success",
         description: `Order ${orderNumber} has been marked as paid.`,
       });
-      fetchOrders(); // Reload data setelah sukses
+      fetchOrders();
     } catch (error: any) {
       toast({
         title: "Error",

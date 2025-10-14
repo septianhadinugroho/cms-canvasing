@@ -1,4 +1,5 @@
 // types/index.ts
+
 export interface Tier {
   min_quantity: number;
   price: string;
@@ -85,20 +86,37 @@ export interface Salesman {
   enabled?: "Y" | "N";
 }
 
+// NEW: Interface for customer addresses
+export interface CustomerAddress {
+  id_address: number;
+  id_customer: number;
+  label: string;
+  address: string;
+  detail_address: string | null;
+  latitude: string;
+  longitude: string;
+  is_primary: number;
+}
+
+
+// UPDATED: Customer interface
 export interface Customer {
   id: number;
   customer_name: string;
-  address: string;
   email: string;
   phone: string;
   store_id: number;
+  enabled: "1" | "0" | null;
+  addresses: CustomerAddress[];
   store_name?: string;
+  // The following properties are deprecated from the main object
+  address?: string;
+  latitude?: string;
+  longitude?: string;
   created_at: string;
   updated_at: string;
-  latitude: string;
-  longitude: string;
-  enabled: "1" | "0" | null;
 }
+
 
 export interface Category {
   id: number;
@@ -143,11 +161,11 @@ export interface ApiOrder {
   customer_name: string;
   customer_phone: string;
   customer_email: string;
-  customer_address: string;
+  address: string;
   store_id: number;
   delivery_type: string;
   payment_source: string;
-  status: string; // Status sudah benar string
+  status: string;
   voucher: any[];
   items: ApiOrderItem[];
   total_amount: number;

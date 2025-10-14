@@ -7,6 +7,9 @@ interface CustomerDetailViewProps {
 }
 
 export function CustomerDetailView({ customer }: CustomerDetailViewProps) {
+  // Find the primary address, or default to the first address if none is marked as primary
+  const primaryAddress = customer.addresses.find(addr => addr.is_primary === 1) || customer.addresses[0];
+
   return (
     <div className="space-y-4 p-2">
       <h3 className="font-semibold text-lg">{customer.customer_name}</h3>
@@ -23,14 +26,18 @@ export function CustomerDetailView({ customer }: CustomerDetailViewProps) {
         <span className="text-muted-foreground">Store ID</span>
         <span className="col-span-2 font-mono">{customer.store_id}</span>
         
-        <span className="text-muted-foreground">Address</span>
-        <span className="col-span-2">{customer.address || '-'}</span>
+        {primaryAddress && (
+          <>
+            <span className="text-muted-foreground">Address</span>
+            <span className="col-span-2">{primaryAddress.address || '-'}</span>
 
-        <span className="text-muted-foreground">Latitude</span>
-        <span className="col-span-2 font-mono">{customer.latitude || '-'}</span>
-        
-        <span className="text-muted-foreground">Longitude</span>
-        <span className="col-span-2 font-mono">{customer.longitude || '-'}</span>
+            <span className="text-muted-foreground">Latitude</span>
+            <span className="col-span-2 font-mono">{primaryAddress.latitude || '-'}</span>
+            
+            <span className="text-muted-foreground">Longitude</span>
+            <span className="col-span-2 font-mono">{primaryAddress.longitude || '-'}</span>
+          </>
+        )}
         
         <span className="text-muted-foreground">Created At</span>
         <span className="col-span-2">{new Date(customer.created_at).toLocaleString()}</span>

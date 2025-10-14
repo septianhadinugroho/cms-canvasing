@@ -33,6 +33,13 @@ import { Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { api, updateCustomerStatus } from "@/lib/api";
 import type { Customer } from "@/types";
+import { useAuth } from "@/components/auth-provider";
+
+interface CustomerApiResponse {
+  status: string;
+  data: Customer[];
+  error: null | any;
+}
 
 export function CustomersTable() {
   const [detailCustomer, setDetailCustomer] = useState<Customer | null>(null);
@@ -41,26 +48,42 @@ export function CustomersTable() {
   const [isLoading, setIsLoading] = useState(true);
   const [isUpdating, setIsUpdating] = useState<Record<number, boolean>>({});
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const fetchCustomers = useCallback(async () => {
+    if (!user?.store_code) {
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const data = await api.get<Customer[]>("/customers/all");
-      setCustomers(data);
+      const response = await api.get<CustomerApiResponse>("/customers/all");
+      
+      const allCustomers = response?.data || [];
+      // PERBAIKAN UTAMA: Ubah store_code user (string) menjadi angka sebelum memfilter
+      const userStoreId = parseInt(user.store_code, 10);
+      const filteredCustomers = allCustomers.filter(c => c.store_id === userStoreId);
+      
+      setCustomers(filteredCustomers);
+
     } catch (error: any) {
       toast({
-        title: "Error",
+        title: "Error mengambil data customer",
         description: error.message,
         variant: "destructive",
       });
+      setCustomers([]);
     } finally {
       setIsLoading(false);
     }
-  }, [toast]);
+  }, [toast, user]);
 
   useEffect(() => {
-    fetchCustomers();
-  }, [fetchCustomers]);
+    if (user) {
+      fetchCustomers();
+    }
+  }, [fetchCustomers, user]);
 
   const handleViewDetail = (customer: Customer) => {
     setDetailCustomer(customer);
@@ -69,22 +92,19 @@ export function CustomersTable() {
 
   const handleStatusChange = async (customer: Customer) => {
     setIsUpdating((prev) => ({ ...prev, [customer.id]: true }));
-    
-    // PERUBAHAN: Tentukan status baru. Jika aktif ("1"), maka status baru adalah 0 (inactive). Jika tidak, status baru adalah 1 (active).
     const newStatus = customer.enabled === "1" ? 0 : 1;
 
     try {
-      // Kirim id dan status baru ke API
       await updateCustomerStatus(customer.id, newStatus);
       toast({
-        title: "Success",
-        description: `Customer ${customer.customer_name} status has been updated.`,
+        title: "Sukses",
+        description: `Status customer ${customer.customer_name} telah diperbarui.`,
       });
-      fetchCustomers(); // Ambil data terbaru dari server
+      fetchCustomers();
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error.message || "Failed to update customer status.",
+        title: "Error mengubah status",
+        description: error.message || "Gagal memperbarui status customer.",
         variant: "destructive",
       });
     } finally {
@@ -93,7 +113,7 @@ export function CustomersTable() {
   };
 
   if (isLoading)
-    return <div className="text-center py-12">Loading customer data...</div>;
+    return <div className="text-center py-12">Memuat data customer...</div>;
 
   return (
     <>
@@ -102,16 +122,15 @@ export function CustomersTable() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Name</TableHead>
+                <TableHead>Nama</TableHead>
                 <TableHead>Email</TableHead>
-                <TableHead>Phone</TableHead>
+                <TableHead>Telepon</TableHead>
                 <TableHead className="text-center">Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="text-right">Aksi</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {customers.map((customer) => {
-                // PERUBAHAN: Cek jika customer.enabled adalah "1" untuk status aktif
                 const isActive = customer.enabled === "1";
                 
                 return (
@@ -130,7 +149,7 @@ export function CustomersTable() {
                             : "bg-red-500 text-white"
                         }
                       >
-                        {isActive ? "Active" : "Inactive"}
+                        {isActive ? "Aktif" : "Tidak Aktif"}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right space-x-2">
@@ -156,26 +175,26 @@ export function CustomersTable() {
                             {isUpdating[customer.id]
                               ? "..."
                               : isActive
-                              ? "Deactivate"
-                              : "Activate"}
+                              ? "Nonaktifkan"
+                              : "Aktifkan"}
                           </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
                             <AlertDialogTitle>
-                              Are you absolutely sure?
+                              Apakah Anda benar-benar yakin?
                             </AlertDialogTitle>
                             <AlertDialogDescription>
-                              This action will change the status for "
+                              Tindakan ini akan mengubah status untuk "
                               {customer.customer_name}".
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogCancel>Batal</AlertDialogCancel>
                             <AlertDialogAction
                               onClick={() => handleStatusChange(customer)}
                             >
-                              Continue
+                              Lanjutkan
                             </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
@@ -189,7 +208,7 @@ export function CustomersTable() {
         </div>
         {customers.length === 0 && !isLoading && (
           <div className="text-center py-12">
-            <p className="text-muted-foreground">No customers found.</p>
+            <p className="text-muted-foreground">Tidak ada customer ditemukan.</p>
           </div>
         )}
       </div>
@@ -198,7 +217,7 @@ export function CustomersTable() {
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>
-              {detailCustomer?.customer_name || "Customer Detail"}
+              {detailCustomer?.customer_name || "Detail Customer"}
             </DialogTitle>
           </DialogHeader>
           {detailCustomer && <CustomerDetailView customer={detailCustomer} />}
