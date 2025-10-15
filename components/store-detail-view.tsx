@@ -1,28 +1,39 @@
 "use client"
 
-import type { Store } from "@/types";
-import { Badge } from "@/components/ui/badge";
+import { MapContainer, TileLayer, Marker } from "react-leaflet"
+import "leaflet/dist/leaflet.css"
+import L from "leaflet"
+import type { Store } from "@/types"
+import { Badge } from "@/components/ui/badge"
+
+// Fix for default icon issue with webpack
+delete (L.Icon.Default.prototype as any)._getIconUrl
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
+  iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
+})
 
 interface StoreDetailViewProps {
-  store: Store;
+  store: Store
 }
 
-type StatusVariant = 'default' | 'destructive' | 'secondary';
-
+type StatusVariant = 'default' | 'destructive' | 'secondary'
 
 export function StoreDetailView({ store }: StoreDetailViewProps) {
   const getStatusInfo = (status: string | number | null | undefined): { text: string; variant: StatusVariant } => {
     if (status === 'active' || status === 1) {
-        return { text: 'Active', variant: 'default' };
+        return { text: 'Active', variant: 'default' }
     }
     if (status === 'inactive' || status === 0) {
-        return { text: 'Inactive', variant: 'destructive' };
+        return { text: 'Inactive', variant: 'destructive' }
     }
-    return { text: 'Unknown', variant: 'secondary' };
-  };
+    return { text: 'Unknown', variant: 'secondary' }
+  }
   
-  const statusInfo = getStatusInfo(store.status);
+  const statusInfo = getStatusInfo(store.status)
 
+  const position: L.LatLngExpression = store.latitude && store.longitude ? [store.latitude, store.longitude] : [ -6.200000, 106.816666 ] // Default to Jakarta
 
   return (
     <div className="space-y-4 p-2 max-h-[70vh] overflow-y-auto pr-4">
@@ -69,6 +80,21 @@ export function StoreDetailView({ store }: StoreDetailViewProps) {
         <span className="text-muted-foreground">Coordinates</span>
         <span className="col-span-2 font-mono">{store.latitude || '-'}, {store.longitude || '-'}</span>
       </div>
+
+      {store.latitude && store.longitude && (
+        <div className="mt-4">
+            <h4 className="text-sm font-semibold mb-2">Store Location</h4>
+            <div className="detail-map-container">
+                <MapContainer center={position} zoom={15} scrollWheelZoom={false} style={{ height: "100%", width: "100%" }}>
+                    <TileLayer
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
+                    <Marker position={position}></Marker>
+                </MapContainer>
+            </div>
+        </div>
+      )}
     </div>
-  );
+  )
 }

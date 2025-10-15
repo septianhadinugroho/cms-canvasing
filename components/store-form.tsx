@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { MapModal } from "@/components/map-modal" // Import the new MapModal component
 import type { Store } from "@/types"
 
 interface StoreFormProps {
@@ -20,8 +21,8 @@ export function StoreForm({ store, onClose, onSave }: StoreFormProps) {
     store_name: store?.store_name || "",
     store_code: store?.store_code || "",
     address: store?.address || "",
-    latitude: store?.latitude?.toString() || "",
-    longitude: store?.longitude?.toString() || "",
+    latitude: store?.latitude || 0,
+    longitude: store?.longitude || 0,
     mid: store?.mid || "",
     tid: store?.tid || "",
     hotline: store?.hotline || "",
@@ -33,31 +34,38 @@ export function StoreForm({ store, onClose, onSave }: StoreFormProps) {
     ip_pos_web: store?.ip_pos_web || "",
     cashier_id: store?.cashier_id || "9000",
   })
-  const [isSaving, setIsSaving] = useState(false);
+  const [isSaving, setIsSaving] = useState(false)
+  const [isMapModalOpen, setMapModalOpen] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSaving(true);
+    e.preventDefault()
+    setIsSaving(true)
 
-    // Konversi status dari string ke integer sebelum dikirim
-    const statusAsInteger = formData.status === 'active' ? 1 : 0;
+    const statusAsInteger = formData.status === 'active' ? 1 : 0
 
     const storeDataToSave: Partial<Store> = {
       id: store?.id,
       ...formData,
-      latitude: parseFloat(formData.latitude) || 0,
-      longitude: parseFloat(formData.longitude) || 0,
-      status: statusAsInteger, // Gunakan nilai yang sudah dikonversi
-    };
+      status: statusAsInteger,
+    }
     
-    // Hapus handleUpdateStore dari sini dan panggil onSave langsung
-    await onSave(storeDataToSave);
+    await onSave(storeDataToSave)
     
-    setIsSaving(false);
+    setIsSaving(false)
+  }
+
+  const handleMapSave = (location: { address: string; latitude: number; longitude: number }) => {
+    setFormData(prev => ({
+      ...prev,
+      address: location.address,
+      latitude: location.latitude,
+      longitude: location.longitude,
+    }))
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto p-1 pr-4">
+    <>
+      <form onSubmit={handleSubmit} className="space-y-4 max-h-[70vh] overflow-y-auto p-1 pr-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
                 <Label htmlFor="store_name">Store Name</Label>
@@ -72,17 +80,9 @@ export function StoreForm({ store, onClose, onSave }: StoreFormProps) {
         <div className="space-y-2">
             <Label htmlFor="address">Address</Label>
             <Textarea id="address" value={formData.address} onChange={(e) => setFormData(p => ({ ...p, address: e.target.value }))} placeholder="Enter full store address" />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-                <Label htmlFor="latitude">Latitude</Label>
-                <Input id="latitude" type="number" step="any" value={formData.latitude} onChange={(e) => setFormData(p => ({ ...p, latitude: e.target.value }))} placeholder="-6.123456" />
-            </div>
-            <div className="space-y-2">
-                <Label htmlFor="longitude">Longitude</Label>
-                <Input id="longitude" type="number" step="any" value={formData.longitude} onChange={(e) => setFormData(p => ({ ...p, longitude: e.target.value }))} placeholder="106.123456" />
-            </div>
+            <Button type="button" variant="link" onClick={() => setMapModalOpen(true)}>
+              Set Address on Map
+            </Button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -147,14 +147,22 @@ export function StoreForm({ store, onClose, onSave }: StoreFormProps) {
             </div>
         </div>
 
-      <div className="flex justify-end space-x-4 pt-4">
-        <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>
-          Cancel
-        </Button>
-        <Button type="submit" className="bg-primary text-primary-foreground hover:bg-primary/90" disabled={isSaving}>
-          {isSaving ? "Saving..." : (store ? "Update Store" : "Add Store")}
-        </Button>
-      </div>
-    </form>
+        <div className="flex justify-end space-x-4 pt-4">
+          <Button type="button" variant="outline" onClick={onClose} disabled={isSaving}>
+            Cancel
+          </Button>
+          <Button type="submit" className="bg-primary text-primary-foreground hover:bg-primary/90" disabled={isSaving}>
+            {isSaving ? "Saving..." : (store ? "Update Store" : "Add Store")}
+          </Button>
+        </div>
+      </form>
+      
+      <MapModal
+        isOpen={isMapModalOpen}
+        onClose={() => setMapModalOpen(false)}
+        onSave={handleMapSave}
+        initialPosition={store?.latitude && store?.longitude ? { lat: store.latitude, lng: store.longitude } : undefined}
+      />
+    </>
   )
 }
