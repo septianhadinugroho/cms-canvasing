@@ -113,6 +113,11 @@ export interface Customer {
   address?: string;
   latitude?: string;
   longitude?: string;
+  nik?: string;
+  dob?: string;
+  pob?: string;
+  gender?: 'Male' | 'Female';
+  nationality?: string;
   created_at: string;
   updated_at: string;
 }

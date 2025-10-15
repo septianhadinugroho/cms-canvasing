@@ -20,9 +20,17 @@ export function CustomerDetailView({ customer }: CustomerDetailViewProps) {
           <p>{customer.email}</p>
           <p className="text-muted-foreground">Phone:</p>
           <p>{customer.phone}</p>
+          <p className="text-muted-foreground">NIK:</p>
+          <p>{customer.nik || '-'}</p>
+          <p className="text-muted-foreground">Place, Date of Birth:</p>
+          <p>{customer.pob && customer.dob ? `${customer.pob}, ${customer.dob}` : '-'}</p>
+          <p className="text-muted-foreground">Gender:</p>
+          <p>{customer.gender || '-'}</p>
+          <p className="text-muted-foreground">Nationality:</p>
+          <p>{customer.nationality || '-'}</p>
         </div>
       </div>
-      
+
       {/* Address List */}
       <div>
         <h3 className="font-semibold text-lg mb-2">Addresses</h3>
