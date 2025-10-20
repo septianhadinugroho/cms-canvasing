@@ -118,6 +118,8 @@ export interface Customer {
   pob?: string;
   gender?: 'Male' | 'Female';
   nationality?: string;
+  npwp?: string;
+  nama_npwp?: string;
   created_at: string;
   updated_at: string;
 }

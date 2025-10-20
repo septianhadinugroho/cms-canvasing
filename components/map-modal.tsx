@@ -53,22 +53,22 @@ function LocationMarker({ position, setPosition, setAddress }: LocationMarkerPro
 }
 
 export function MapModal({ isOpen, onClose, onSave, initialPosition }: MapModalProps) {
-  const [position, setPosition] = useState<LatLng | null>(initialPosition ? new L.LatLng(initialPosition.lat, initialPosition.lng) : null)
-  const [address, setAddress] = useState("")
+  const [position, setPosition] = useState<LatLng | null>(initialPosition ? new L.LatLng(initialPosition.lat, initialPosition.lng) : null);
+  const [address, setAddress] = useState("");
 
   useEffect(() => {
-    if (initialPosition) {
-      const latLng = new L.LatLng(initialPosition.lat, initialPosition.lng)
-      setPosition(latLng)
+    if (isOpen && initialPosition) { // Jalankan hanya saat modal terbuka
+      const latLng = new L.LatLng(initialPosition.lat, initialPosition.lng);
+      setPosition(latLng);
       // Fetch initial address if position is provided
       fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${initialPosition.lat}&lon=${initialPosition.lng}`)
         .then(response => response.json())
         .then(data => {
-          setAddress(data.display_name || "")
+          setAddress(data.display_name || "");
         })
-        .catch(err => console.error("Error fetching initial address: ", err))
+        .catch(err => console.error("Error fetching initial address: ", err));
     }
-  }, [initialPosition])
+  }, [initialPosition, isOpen]);
 
   const handleSave = () => {
     if (position) {

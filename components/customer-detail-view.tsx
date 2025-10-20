@@ -28,6 +28,10 @@ export function CustomerDetailView({ customer }: CustomerDetailViewProps) {
           <p>{customer.gender || '-'}</p>
           <p className="text-muted-foreground">Nationality:</p>
           <p>{customer.nationality || '-'}</p>
+          <p className="text-muted-foreground">NPWP:</p>
+          <p>{customer.npwp || '-'}</p>
+          <p className="text-muted-foreground">Nama NPWP:</p>
+          <p>{customer.nama_npwp || '-'}</p>
         </div>
       </div>
 
