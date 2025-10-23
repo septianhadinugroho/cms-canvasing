@@ -3,6 +3,7 @@
 export interface Tier {
   min_quantity: number;
   price: string;
+  price_promo?: string;
 }
 
 export interface User {

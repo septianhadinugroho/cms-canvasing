@@ -1,5 +1,3 @@
-// components/product-form.tsx
-
 "use client"
 
 import type React from "react"
@@ -24,6 +22,26 @@ import {
 import { cn } from "@/lib/utils"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
+interface CategoryWithChildren {
+  id: number;
+  name: string;
+  slug: string;
+  children?: CategoryWithChildren[];
+}
+const flattenCategories = (cats: CategoryWithChildren[]): Category[] => {
+  let flatList: Category[] = [];
+
+  cats.forEach(cat => {
+    flatList.push({ id: cat.id, name: cat.name, slug: cat.slug }); 
+    
+    if (cat.children && cat.children.length > 0) {
+      flatList = flatList.concat(flattenCategories(cat.children));
+    }
+  });
+
+  return flatList;
+};
+
 
 interface ProductFormProps {
   product?: Product
@@ -46,7 +64,7 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
     category_id: product?.category_id?.toString() || "",
     store_id: product?.store_id || "",
     price: product?.price?.toString() || "",
-    price_promo: "0",
+    price_promo: product?.tiers?.[0]?.price_promo?.toString() || "0",
     vat: product?.vat?.toString() || "",
     departmentCode: product?.departmentCode || "",
     stock: product?.stock?.toString() || "0",
@@ -73,15 +91,16 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
     const fetchData = async () => {
       try {
         const [categoriesRes, storesRes] = await Promise.all([
-          api.get<Category[]>('/categories'),
+          api.get<CategoryWithChildren[]>('/categories'),
           api.get<Store[]>('/stores/all')
         ]);
         
-        // Log data kategori untuk debugging
         console.log("Categories fetched from API:", categoriesRes);
 
-        setCategories(categoriesRes);
+        const flatCategories = flattenCategories(categoriesRes);
+        setCategories(flatCategories);
         setStores(storesRes);
+
       } catch (error) {
         console.error("Failed to fetch categories or stores", error);
         toast({
@@ -95,10 +114,33 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
     fetchData();
   }, [toast]);
 
-
-  // Fill form data when product prop changes (for edit mode)
   useEffect(() => {
-    if (product) {
+    if (product && categories.length > 0) {
+      
+      let foundCategoryId = "";
+
+      if (product.category_id) {
+        foundCategoryId = product.category_id.toString();
+      } 
+      else if (product.name_category) {
+        const productNameCategorySlug = product.name_category.trim().toUpperCase();
+        
+        const matchingCategory = categories.find(
+          (cat) => (cat.slug || "").trim().toUpperCase() === productNameCategorySlug
+        );
+
+        if (matchingCategory) {
+          foundCategoryId = matchingCategory.id.toString();
+        } else {
+           const matchingCategoryByName = categories.find(
+             (cat) => (cat.name || "").trim().toUpperCase() === productNameCategorySlug
+           );
+           if (matchingCategoryByName) {
+             foundCategoryId = matchingCategoryByName.id.toString();
+           }
+        }
+      }
+
       setFormData({
         product_name: product.product_name || "",
         sku: product.sku || "",
@@ -108,10 +150,10 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
         short_name: product.short_name || "",
         unit: product.unit || "UNIT",
         description: product.description || "",
-        category_id: product.category_id ? product.category_id.toString() : "",
+        category_id: foundCategoryId,
         store_id: product.store_id || "",
         price: product.price?.toString() || "",
-        price_promo: "0", 
+        price_promo: product.tiers?.[0]?.price_promo?.toString() || "0",
         vat: product.vat?.toString() || "",
         departmentCode: product.departmentCode || "",
         stock: product.stock?.toString() || "0",
@@ -129,7 +171,7 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
       }
 
     }
-  }, [product]);
+  }, [product, categories]);
 
   const convertGoogleDriveUrl = (url: string): string => {
     const regex = /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/;
@@ -290,7 +332,7 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
                           {categories.map((cat) => (
                             <CommandItem
                               key={cat.id}
-                              value={`${cat.id} - ${cat.name}`} // Diubah untuk search by ID or name
+                              value={`${cat.id} - ${cat.name}`}
                               onSelect={() => {
                                 setFormData(prev => ({ ...prev, category_id: cat.id.toString() }))
                                 setCategoryPopoverOpen(false)
@@ -302,7 +344,6 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
                                   formData.category_id === cat.id.toString() ? "opacity-100" : "opacity-0"
                                 )}
                               />
-                              {/* Tampilkan ID dan Nama */}
                               <div className="flex items-center w-full">
                                 <span className="font-mono text-xs w-12 text-right mr-2 opacity-70">{cat.id}</span>
                                 <span className="truncate">{cat.name}</span>
@@ -342,7 +383,7 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
                           {stores.map((store) => (
                             <CommandItem
                               key={store.id}
-                              value={`${store.id} - ${store.store_name}`} // Diubah untuk search by ID or name
+                              value={`${store.id} - ${store.store_name}`}
                               onSelect={() => {
                                 setFormData(prev => ({ ...prev, store_id: store.id.toString() }))
                                 setStorePopoverOpen(false)
@@ -354,7 +395,6 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
                                   formData.store_id === store.id.toString() ? "opacity-100" : "opacity-0"
                                 )}
                               />
-                              {/* Tampilkan ID dan Nama */}
                               <div className="flex items-center w-full">
                                 <span className="font-mono text-xs w-12 text-right mr-2 opacity-70">{store.id}</span>
                                 <span className="truncate">{store.store_name}</span>
