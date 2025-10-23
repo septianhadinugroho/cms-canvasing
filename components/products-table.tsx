@@ -153,6 +153,7 @@ export function ProductsTable({ searchTerm, storeCode, refreshKey }: ProductsTab
             <TableRow>
               <TableHead>Product</TableHead>
               <TableHead>SKU</TableHead>
+              <TableHead>Barcode</TableHead>
               <TableHead>Category</TableHead>
               <TableHead>Stock</TableHead>
               <TableHead>Price</TableHead>
@@ -180,6 +181,7 @@ export function ProductsTable({ searchTerm, storeCode, refreshKey }: ProductsTab
                   </div>
                 </TableCell>
                 <TableCell className="font-mono">{product.sku}</TableCell>
+                <TableCell className="font-mono">{product.barcode || '-'}</TableCell>
                 <TableCell>{product.name_category}</TableCell>
                 <TableCell>{product.stock} {product.unit}</TableCell>
                 <TableCell>Rp {(product.price ?? 0).toLocaleString('id-ID')}</TableCell>
