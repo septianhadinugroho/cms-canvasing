@@ -51,9 +51,17 @@ export function ProductsTable({ searchTerm, storeCode, refreshKey }: ProductsTab
   const fetchProducts = useCallback(async () => {
     setIsLoading(true);
     try {
-      const params = { storeCode, search: searchTerm, page: currentPage, limit: 10 };
-      const response = await api.get<ProductApiResponse>('/products', params);
-      
+      const params: Record<string, any> = {
+        page: currentPage,
+        limit: 10,
+      };
+
+      if (searchTerm) {
+        params.search = searchTerm;
+      }
+
+      const response = await api.get<ProductApiResponse>('/products/all', params);
+
       const productsWithPrice = response.items.map(p => ({
         ...p,
         price: p.tiers?.[0]?.price ? parseFloat(p.tiers[0].price) : 0,
@@ -70,7 +78,7 @@ export function ProductsTable({ searchTerm, storeCode, refreshKey }: ProductsTab
     } finally {
       setIsLoading(false);
     }
-  }, [storeCode, searchTerm, currentPage, toast]);
+  }, [searchTerm, currentPage, toast]); // Hapus storeCode dari dependency array
 
   useEffect(() => {
     fetchProducts();
@@ -162,7 +170,6 @@ export function ProductsTable({ searchTerm, storeCode, refreshKey }: ProductsTab
                         alt={product.product_name || "Product image"}
                         fill
                         className="object-cover"
-                        unoptimized
                         onError={(e) => { (e.target as HTMLImageElement).src = '/placeholder.svg' }}
                       />
                     </div>
