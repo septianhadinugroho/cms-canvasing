@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
-// 'TierPrice' JANGAN di-import di sini lagi
+// 'TierPrice' JANGAN di-import di sini
 import type { Product, ProductFormData, Store, Category } from "@/types" 
 import { api } from "@/lib/api"
 import { X, Plus, ChevronsUpDown, Check, BadgePercent } from "lucide-react"
@@ -22,7 +22,6 @@ import {
 } from "@/components/ui/command"
 import { cn } from "@/lib/utils"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-// Import Card lagi
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { TierPriceModal } from "./tier-price-modal"
 
@@ -50,7 +49,7 @@ interface ProductFormProps {
 export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
   const isEditMode = !!product;
 
-  // KEMBALIKAN 'price', 'price_promo', 'custom_price'
+  // KEMBALIKAN 'price', 'price_promo', 'custom_price' ke state
   const [formData, setFormData] = useState({
     product_name: product?.product_name || "",
     sku: product?.sku || "",
@@ -121,6 +120,7 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
       }
 
       // Cari data tier untuk min_quantity: 1
+      // Gunakan 'product.price' sebagai fallback jika 'tiers' tidak ada
       const tierOne = product.tiers?.find(t => t.min_quantity === 1);
 
       setFormData({
@@ -151,8 +151,18 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
           setImageUrls(parsedImages);
         } else { setImageUrls([product.url_image || ""]); }
       } catch { setImageUrls([product.url_image || ""]); }
+    
+    } else if (!isEditMode) {
+      // Untuk produk BARU, kita siapkan input harga
+      // 'price' akan dikirim ke 'createProduct'
+      setFormData(prev => ({
+        ...prev,
+        price: "",
+        price_promo: "0",
+        custom_price: "0",
+      }));
     }
-  }, [product, categories]);
+  }, [product, categories, isEditMode]);
 
   // ... (handler image tetap sama) ...
   const convertGoogleDriveUrl = (url: string): string => {
@@ -187,6 +197,11 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
       toast({ title: "Error", description: "Required fields cannot be empty.", variant: "destructive" });
       return
     }
+    // Validasi harga tier 1 (wajib ada 'price')
+    if (parseFloat(formData.price) <= 0) {
+      toast({ title: "Invalid Price", description: "Price for Min. Qty 1 must be greater than 0.", variant: "destructive" });
+      return
+    }
 
     const processedImageUrls = imageUrls
       .map(url => convertGoogleDriveUrl(url))
@@ -200,7 +215,7 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
         stock: parseInt(formData.stock, 10) || 0,
         url_image: JSON.stringify(processedImageUrls),
         
-        // Ini akan dikirim ke BE dan digunakan oleh 'updateProduct'
+        // Ini akan dikirim ke BE dan digunakan oleh 'updateProduct' / 'createProduct'
         price: parseFloat(formData.price) || 0,
         price_promo: parseFloat(formData.price_promo) || 0,
         custom_price: parseFloat(formData.custom_price) || 0,
@@ -216,6 +231,7 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
         await api.put(`/products/${product.product_id}`, payload);
         toast({ title: "Success!", description: "Product updated successfully." });
       } else {
+        // 'createProduct' di BE Anda juga butuh 'price', 'price_promo', 'custom_price'
         await api.post("/products", payload);
         toast({ title: "Success!", description: "Product added successfully." });
       }
@@ -224,7 +240,7 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
     } catch (error: any) {
        toast({
         title: "An error occurred",
-        description: error.message || "Failed to save the product.",
+        description: error.response?.data?.message || error.message || "Failed to save the product.",
         variant: "destructive",
       });
     }
@@ -368,7 +384,7 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <h4 className="text-sm font-medium mb-2">Base Price (Min. Quantity: 1)</h4>
+            <h4 className="text-sm font-medium mb-2">Price for Min. Quantity: 1</h4>
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-2">
                 <Label htmlFor="price">Price <span className="text-red-500">*</span></Label>
@@ -406,10 +422,11 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
             </div>
             <div className="text-xs text-muted-foreground space-y-1 mt-3">
               <p><span className="text-red-500 inline-block w-3">*</span> Required</p>
-              <p><span className="text-red-500 inline-block w-3">**</span> Optional</p>
+              <p><span className="text-red-500 inline-block w-3">**</span> Optional (Price will be used if 0)</p>
             </div>
           </div>
           
+          {/* Tombol Modal HANYA muncul saat EDIT MODE */}
           {isEditMode && product && (
             <div className="border-t pt-4">
                <h4 className="text-sm font-medium mb-2">Other Prices (Wholesale)</h4>

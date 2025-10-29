@@ -63,14 +63,38 @@ export function SalesOrderDetail({ order, statusText }: SalesOrderDetailProps) {
               </tr>
             </thead>
             <tbody>
-              {order.items.map((item, index) => (
-                <tr key={index} className="border-b last:border-none">
-                  <td className="p-2">{item.product_name}</td>
-                  <td className="p-2 text-right">{item.quantity}</td>
-                  <td className="p-2 text-right">Rp{Number(item.price).toLocaleString('id-ID')}</td>
-                  <td className="p-2 text-right">Rp{(item.quantity * Number(item.price)).toLocaleString('id-ID')}</td>
-                </tr>
-              ))}
+              {/* <-- AWAL PERUBAHAN LOGIKA HARGA --> */}
+              {order.items.map((item, index) => {
+                // Ambil nilai harga, konversi ke Number. Default ke 0 jika tidak valid.
+                const customPrice = Number(item.custom_price) || 0;
+                const promoPrice = Number(item.price_promo) || 0;
+                const regularPrice = Number(item.price) || 0;
+
+                // Terapkan logika prioritas sesuai permintaan
+                let displayPrice: number;
+                if (customPrice > 0) {
+                  displayPrice = customPrice; // Prioritas 1: Custom Price
+                } else if (promoPrice > 0) {
+                  displayPrice = promoPrice; // Prioritas 2: Promo Price
+                } else {
+                  displayPrice = regularPrice; // Prioritas 3: Regular Price
+                }
+
+                // Hitung total baris berdasarkan harga yang sudah ditentukan
+                const totalRowPrice = item.quantity * displayPrice;
+
+                return (
+                  <tr key={index} className="border-b last:border-none">
+                    <td className="p-2">{item.product_name}</td>
+                    <td className="p-2 text-right">{item.quantity}</td>
+                    {/* Tampilkan harga yang sudah diproses */}
+                    <td className="p-2 text-right">Rp{displayPrice.toLocaleString('id-ID')}</td>
+                    {/* Hitung total berdasarkan harga yang diproses */}
+                    <td className="p-2 text-right">Rp{totalRowPrice.toLocaleString('id-ID')}</td>
+                  </tr>
+                );
+              })}
+              {/* <-- AKHIR PERUBAHAN LOGIKA HARGA --> */}
             </tbody>
           </table>
         </div>

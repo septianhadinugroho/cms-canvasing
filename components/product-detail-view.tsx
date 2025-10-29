@@ -71,7 +71,6 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
         </div>
 
         {/* --- HAPUS CARD "BASE PRICE" DARI SINI --- */}
-        {/* Card yang menampilkan product.price dihilangkan */}
 
         {/* Tampilkan Stok & VAT di sini saja */}
         <Card>
@@ -103,7 +102,8 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
                     // --- Logika Prioritas 3-Level (Custom > Promo > Price) ---
                     const priceNormal = parseFloat(String(tier.price))
                     const pricePromo = parseFloat(String(tier.price_promo))
-                    const priceCustom = parseFloat(String(tier.custom_price || "0"))
+                    // Tambahkan '|| "0"' untuk mengatasi undefined/null
+                    const priceCustom = parseFloat(String(tier.custom_price || "0")) 
 
                     let finalPrice = priceNormal
                     let hasStrikethrough = false
@@ -116,15 +116,12 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
                       hasStrikethrough = true
                     }
                     // --- AKHIR LOGIKA ---
-
-                    // HAPUS 'if (tier.min_quantity === 1)'
-                    // Tampilkan semua tier
                     
                     return (
                       <div key={index} className="flex justify-between items-center text-sm gap-4">
                         <span className="text-muted-foreground whitespace-nowrap">
-                          {/* Tampilkan "Base" untuk min_q 1 */}
-                          {tier.min_quantity === 1 ? <strong>Base (Min 1 {product.unit})</strong> : `Min. ${tier.min_quantity} ${product.unit}`}
+                          {/* Beri label khusus untuk tier 1 */}
+                          {tier.min_quantity === 1 ? <strong>Min. 1 {product.unit}</strong> : `Min. ${tier.min_quantity} ${product.unit}`}
                         </span>
                         <div className="text-right flex-shrink-0">
                           {hasStrikethrough && (

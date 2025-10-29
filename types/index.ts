@@ -159,8 +159,11 @@ interface ApiOrderItem {
   product_name: string;
   quantity: number;
   price: string;
+  price_promo?: string;   // Tambahkan ini (opsional)
+  custom_price?: string;  // Tambahkan ini (opsional)
   percentage: number;
 }
+// <-- PERUBAHAN DI SINI -->
 
 export interface ApiResponse<T> {
   status: string;

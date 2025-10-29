@@ -90,11 +90,11 @@ export function TierPriceModal({
         variant: "destructive",
       });
       setIsLoading(false);
-      return;
+      return; // STOP
     }
     // --- AKHIR VALIDASI BARU ---
 
-    // --- 2. VALIDASI DUPLIKAT (Tetap ada) ---
+    // --- 2. VALIDASI DUPLIKAT (Tetap penting) ---
     const existingTier = tiers.find(t => t.min_quantity === minQty);
     if (existingTier) {
       toast({
@@ -103,7 +103,7 @@ export function TierPriceModal({
         variant: "destructive",
       });
       setIsLoading(false);
-      return;
+      return; // STOP
     }
 
     // 3. Validasi input
@@ -135,7 +135,7 @@ export function TierPriceModal({
         description: "New price tier added.",
       })
       setNewTier(initialFormState) 
-      onTiersUpdate() 
+      onTiersUpdate() // Ini akan me-refresh data di form utama
     } catch (error: any) {
       toast({
         title: "An error occurred",
