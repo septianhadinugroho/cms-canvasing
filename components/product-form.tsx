@@ -7,9 +7,10 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
-import type { Product, ProductFormData, Store, Category } from "@/types"
+// 'TierPrice' JANGAN di-import di sini lagi
+import type { Product, ProductFormData, Store, Category } from "@/types" 
 import { api } from "@/lib/api"
-import { X, Plus, ChevronsUpDown, Check } from "lucide-react"
+import { X, Plus, ChevronsUpDown, Check, BadgePercent } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import {
   Command,
@@ -21,27 +22,24 @@ import {
 } from "@/components/ui/command"
 import { cn } from "@/lib/utils"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+// Import Card lagi
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { TierPriceModal } from "./tier-price-modal"
 
+// ... (Interface CategoryWithChildren dan flattenCategories tetap sama) ...
 interface CategoryWithChildren {
-  id: number;
-  name: string;
-  slug: string;
-  children?: CategoryWithChildren[];
+  id: number; name: string; slug: string; children?: CategoryWithChildren[];
 }
 const flattenCategories = (cats: CategoryWithChildren[]): Category[] => {
   let flatList: Category[] = [];
-
   cats.forEach(cat => {
-    flatList.push({ id: cat.id, name: cat.name, slug: cat.slug }); 
-    
+    flatList.push({ id: cat.id, name: cat.name, slug: cat.slug });
     if (cat.children && cat.children.length > 0) {
       flatList = flatList.concat(flattenCategories(cat.children));
     }
   });
-
   return flatList;
 };
-
 
 interface ProductFormProps {
   product?: Product
@@ -52,6 +50,7 @@ interface ProductFormProps {
 export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
   const isEditMode = !!product;
 
+  // KEMBALIKAN 'price', 'price_promo', 'custom_price'
   const [formData, setFormData] = useState({
     product_name: product?.product_name || "",
     sku: product?.sku || "",
@@ -63,30 +62,30 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
     description: product?.description || "",
     category_id: product?.category_id?.toString() || "",
     store_id: product?.store_id || "",
-    price: product?.price?.toString() || "",
-    price_promo: product?.tiers?.[0]?.price_promo?.toString() || "0",
     vat: product?.vat?.toString() || "",
     departmentCode: product?.departmentCode || "",
     stock: product?.stock?.toString() || "0",
+    
+    // Ini adalah state untuk tier min_quantity: 1
+    price: "0",
+    price_promo: "0",
+    custom_price: "0",
   });
   
+  // ... (useState untuk imageUrls, categories, stores, popovers tetap sama) ...
   const [imageUrls, setImageUrls] = useState<string[]>(() => {
     if (!product?.url_image) return [""];
-    try {
-      const parsed = JSON.parse(product.url_image);
+    try { const parsed = JSON.parse(product.url_image);
       return Array.isArray(parsed) && parsed.length > 0 ? parsed : [""];
-    } catch {
-      return [String(product.url_image)];
-    }
+    } catch { return [String(product.url_image)]; }
   });
-
   const [categories, setCategories] = useState<Category[]>([]);
   const [stores, setStores] = useState<Store[]>([]);
   const [isCategoryPopoverOpen, setCategoryPopoverOpen] = useState(false)
   const [isStorePopoverOpen, setStorePopoverOpen] = useState(false)
-
   const { toast } = useToast()
 
+  // ... (useEffect fetchData tetap sama) ...
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -94,52 +93,35 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
           api.get<CategoryWithChildren[]>('/categories'),
           api.get<Store[]>('/stores/all')
         ]);
-        
-        console.log("Categories fetched from API:", categoriesRes);
-
         const flatCategories = flattenCategories(categoriesRes);
         setCategories(flatCategories);
         setStores(storesRes);
-
       } catch (error) {
         console.error("Failed to fetch categories or stores", error);
-        toast({
-          title: "Error",
-          description: "Failed to load category or store data.",
-          variant: "destructive",
-        })
+        toast({ title: "Error", description: "Failed to load category or store data.", variant: "destructive" })
       }
     };
-
     fetchData();
   }, [toast]);
+
 
   useEffect(() => {
     if (product && categories.length > 0) {
       
       let foundCategoryId = "";
-
-      if (product.category_id) {
-        foundCategoryId = product.category_id.toString();
-      } 
+      // ... (logika foundCategoryId tetap sama) ...
+      if (product.category_id) { foundCategoryId = product.category_id.toString(); } 
       else if (product.name_category) {
-        const productNameCategorySlug = product.name_category.trim().toUpperCase();
-        
-        const matchingCategory = categories.find(
-          (cat) => (cat.slug || "").trim().toUpperCase() === productNameCategorySlug
-        );
-
-        if (matchingCategory) {
-          foundCategoryId = matchingCategory.id.toString();
-        } else {
-           const matchingCategoryByName = categories.find(
-             (cat) => (cat.name || "").trim().toUpperCase() === productNameCategorySlug
-           );
-           if (matchingCategoryByName) {
-             foundCategoryId = matchingCategoryByName.id.toString();
-           }
+        const slug = product.name_category.trim().toUpperCase();
+        const catBySlug = categories.find((cat) => (cat.slug || "").trim().toUpperCase() === slug);
+        if (catBySlug) { foundCategoryId = catBySlug.id.toString(); } 
+        else { const catByName = categories.find((cat) => (cat.name || "").trim().toUpperCase() === slug);
+           if (catByName) { foundCategoryId = catByName.id.toString(); }
         }
       }
+
+      // Cari data tier untuk min_quantity: 1
+      const tierOne = product.tiers?.find(t => t.min_quantity === 1);
 
       setFormData({
         product_name: product.product_name || "",
@@ -152,71 +134,57 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
         description: product.description || "",
         category_id: foundCategoryId,
         store_id: product.store_id || "",
-        price: product.price?.toString() || "",
-        price_promo: product.tiers?.[0]?.price_promo?.toString() || "0",
         vat: product.vat?.toString() || "",
         departmentCode: product.departmentCode || "",
         stock: product.stock?.toString() || "0",
+        
+        // Isi state dengan data tier 1
+        price: tierOne?.price?.toString() || product.price?.toString() || "0",
+        price_promo: tierOne?.price_promo?.toString() || "0",
+        custom_price: tierOne?.custom_price?.toString() || "0",
       });
 
+      // ... (logika imageUrls tetap sama) ...
       try {
         const parsedImages = JSON.parse(product.url_image);
         if (Array.isArray(parsedImages) && parsedImages.length > 0) {
           setImageUrls(parsedImages);
-        } else {
-          setImageUrls([product.url_image || ""]);
-        }
-      } catch {
-        setImageUrls([product.url_image || ""]);
-      }
-
+        } else { setImageUrls([product.url_image || ""]); }
+      } catch { setImageUrls([product.url_image || ""]); }
     }
   }, [product, categories]);
 
+  // ... (handler image tetap sama) ...
   const convertGoogleDriveUrl = (url: string): string => {
     const regex = /drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)/;
     const match = url.match(regex);
-    if (match && match[1]) {
-      const fileId = match[1];
-      return `https://drive.google.com/uc?export=view&id=${fileId}`;
-    }
+    if (match && match[1]) { return `https://drive.google.com/uc?export=view&id=${match[1]}`; }
     return url;
   };
-
   const handleImageUrlChange = (index: number, value: string) => {
-    const newUrls = [...imageUrls];
-    newUrls[index] = value;
-    setImageUrls(newUrls);
+    const newUrls = [...imageUrls]; newUrls[index] = value; setImageUrls(newUrls);
   };
-  
   const handleUrlInputBlur = (index: number) => {
     const newUrls = [...imageUrls];
     const convertedUrl = convertGoogleDriveUrl(newUrls[index]);
-    if (newUrls[index] !== convertedUrl) {
-        newUrls[index] = convertedUrl;
-        setImageUrls(newUrls);
-    }
+    if (newUrls[index] !== convertedUrl) { newUrls[index] = convertedUrl; setImageUrls(newUrls); }
   };
-
-  const addImageUrlInput = () => {
-    setImageUrls([...imageUrls, ""]);
-  };
-
+  const addImageUrlInput = () => { setImageUrls([...imageUrls, ""]); };
   const removeImageUrlInput = (index: number) => {
-    if (imageUrls.length > 1) {
-      const newUrls = imageUrls.filter((_, i) => i !== index);
+    if (imageUrls.length > 1) { const newUrls = imageUrls.filter((_, i) => i !== index);
       setImageUrls(newUrls);
     }
+  };
+
+  // Handler untuk input harga (tier 1)
+  const handlePriceChange = (field: 'price' | 'price_promo' | 'custom_price', value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.product_name || !formData.sku || (!isEditMode && !formData.store_id) || !formData.category_id) {
-      toast({
-        title: "Error",
-        description: "Required fields cannot be empty.",
-        variant: "destructive",
-      })
+      toast({ title: "Error", description: "Required fields cannot be empty.", variant: "destructive" });
       return
     }
 
@@ -224,14 +192,18 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
       .map(url => convertGoogleDriveUrl(url))
       .filter(url => url.trim() !== "");
       
+    // PERBAIKI PAYLOAD - Kembalikan price, price_promo, custom_price
     const payload: ProductFormData & { url_image: string, store_id?: string } = {
         ...formData,
-        price: parseFloat(formData.price) || 0,
-        price_promo: parseFloat(formData.price_promo) || 0,
         vat: parseFloat(formData.vat) || 0,
         departmentCode: formData.departmentCode,
         stock: parseInt(formData.stock, 10) || 0,
         url_image: JSON.stringify(processedImageUrls),
+        
+        // Ini akan dikirim ke BE dan digunakan oleh 'updateProduct'
+        price: parseFloat(formData.price) || 0,
+        price_promo: parseFloat(formData.price_promo) || 0,
+        custom_price: parseFloat(formData.custom_price) || 0,
     };
 
     if (!isEditMode) {
@@ -240,13 +212,14 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
 
     try {
       if (isEditMode && product) {
+        // Panggilan ini sekarang akan BERHASIL karena payload-nya lengkap
         await api.put(`/products/${product.product_id}`, payload);
         toast({ title: "Success!", description: "Product updated successfully." });
       } else {
         await api.post("/products", payload);
         toast({ title: "Success!", description: "Product added successfully." });
       }
-      onSave();
+      onSave(); // onSave akan memicu refresh data
       onClose();
     } catch (error: any) {
        toast({
@@ -261,6 +234,7 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
     <form onSubmit={handleSubmit} className="space-y-6 max-h-[70vh] overflow-y-auto p-1 pr-4">
        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-4">
+          {/* ... (Field Nama, Short Name, Slug, VAT, Dept Code tetap sama) ... */}
           <div className="space-y-2">
             <Label htmlFor="product_name">Product Name</Label>
             <Input id="product_name" value={formData.product_name} onChange={(e) => setFormData((prev) => ({ ...prev, product_name: e.target.value }))} placeholder="e.g., Nike Air Max" required />
@@ -284,6 +258,7 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
         </div>
 
         <div className="space-y-4">
+          {/* ... (Field SKU, Barcode, Unit, Kategori, Store tetap sama) ... */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="sku">SKU</Label>
@@ -298,9 +273,7 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
             <div className="space-y-2">
                 <Label htmlFor="unit">Unit</Label>
                 <Select value={formData.unit} onValueChange={(value) => setFormData(p => ({ ...p, unit: value }))}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a unit" />
-                  </SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="Select a unit" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="UNIT">UNIT</SelectItem>
                     <SelectItem value="PCS">PCS</SelectItem>
@@ -311,39 +284,25 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
                 <Label htmlFor="category_id">Category</Label>
                 <Popover open={isCategoryPopoverOpen} onOpenChange={setCategoryPopoverOpen}>
                   <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={isCategoryPopoverOpen}
-                      className="w-full justify-between font-normal"
-                    >
-                      {formData.category_id
-                        ? categories.find((cat) => cat.id.toString() === formData.category_id)?.name
-                        : "Select category..."}
+                    <Button variant="outline" role="combobox" aria-expanded={isCategoryPopoverOpen} className="w-full justify-between font-normal">
+                      {formData.category_id ? categories.find((cat) => cat.id.toString() === formData.category_id)?.name : "Select category..."}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                     <Command>
                       <CommandInput placeholder="Search category..." />
-                      <CommandList>
-                        <CommandEmpty>No category found.</CommandEmpty>
+                      <CommandList><CommandEmpty>No category found.</CommandEmpty>
                         <CommandGroup>
                           {categories.map((cat) => (
                             <CommandItem
-                              key={cat.id}
-                              value={`${cat.id} - ${cat.name}`}
+                              key={cat.id} value={`${cat.id} - ${cat.name}`}
                               onSelect={() => {
                                 setFormData(prev => ({ ...prev, category_id: cat.id.toString() }))
                                 setCategoryPopoverOpen(false)
                               }}
                             >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  formData.category_id === cat.id.toString() ? "opacity-100" : "opacity-0"
-                                )}
-                              />
+                              <Check className={cn("mr-2 h-4 w-4", formData.category_id === cat.id.toString() ? "opacity-100" : "opacity-0")} />
                               <div className="flex items-center w-full">
                                 <span className="font-mono text-xs w-12 text-right mr-2 opacity-70">{cat.id}</span>
                                 <span className="truncate">{cat.name}</span>
@@ -362,39 +321,25 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
                 <Label htmlFor="store_id">Store</Label>
                 <Popover open={isStorePopoverOpen} onOpenChange={setStorePopoverOpen}>
                   <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      role="combobox"
-                      aria-expanded={isStorePopoverOpen}
-                      className="w-full justify-between font-normal"
-                    >
-                      {formData.store_id
-                        ? stores.find((store) => store.id.toString() === formData.store_id)?.store_name
-                        : "Select store..."}
+                    <Button variant="outline" role="combobox" aria-expanded={isStorePopoverOpen} className="w-full justify-between font-normal">
+                      {formData.store_id ? stores.find((store) => store.id.toString() === formData.store_id)?.store_name : "Select store..."}
                       <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                     <Command>
                       <CommandInput placeholder="Search store..." />
-                      <CommandList>
-                        <CommandEmpty>No store found.</CommandEmpty>
+                      <CommandList><CommandEmpty>No store found.</CommandEmpty>
                         <CommandGroup>
                           {stores.map((store) => (
                             <CommandItem
-                              key={store.id}
-                              value={`${store.id} - ${store.store_name}`}
+                              key={store.id} value={`${store.id} - ${store.store_name}`}
                               onSelect={() => {
                                 setFormData(prev => ({ ...prev, store_id: store.id.toString() }))
                                 setStorePopoverOpen(false)
                               }}
                             >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  formData.store_id === store.id.toString() ? "opacity-100" : "opacity-0"
-                                )}
-                              />
+                              <Check className={cn("mr-2 h-4 w-4", formData.store_id === store.id.toString() ? "opacity-100" : "opacity-0")} />
                               <div className="flex items-center w-full">
                                 <span className="font-mono text-xs w-12 text-right mr-2 opacity-70">{store.id}</span>
                                 <span className="truncate">{store.store_name}</span>
@@ -408,23 +353,83 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
                 </Popover>
               </div>
            )}
-           <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                    <Label htmlFor="price">Price</Label>
-                    <Input id="price" type="number" value={formData.price} onChange={(e) => setFormData(p => ({ ...p, price: e.target.value }))} placeholder="150000" required />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="price_promo">Promo Price</Label>
-                    <Input id="price_promo" type="number" value={formData.price_promo} onChange={(e) => setFormData(p => ({ ...p, price_promo: e.target.value }))} placeholder="99000" />
-                </div>
-            </div>
-             <div className="space-y-2">
-                <Label htmlFor="stock">Stock</Label>
-                <Input id="stock" type="number" value={formData.stock} onChange={(e) => setFormData(p => ({ ...p, stock: e.target.value }))} placeholder="100" required />
-            </div>
+           
+           <div className="space-y-2">
+              <Label htmlFor="stock">Stock</Label>
+              <Input id="stock" type="number" value={formData.stock} onChange={(e) => setFormData(p => ({ ...p, stock: e.target.value }))} placeholder="100" required />
+          </div>
         </div>
       </div>
 
+      {/* --- BAGIAN BARU: Input Harga untuk Tier 1 & Tombol Modal --- */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Product Prices</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <h4 className="text-sm font-medium mb-2">Base Price (Min. Quantity: 1)</h4>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="price">Price <span className="text-red-500">*</span></Label>
+                <Input
+                  id="price"
+                  type="number"
+                  placeholder="e.g., 100000"
+                  value={formData.price}
+                  onChange={e => handlePriceChange('price', e.target.value)}
+                  disabled={!isEditMode && !formData.store_id} // Disable jika add mode & store blm dipilih
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="price_promo">Promo Price <span className="text-red-500">**</span></Label>
+                <Input
+                  id="price_promo"
+                  type="number"
+                  placeholder="e.g., 90000"
+                  value={formData.price_promo}
+                  onChange={e => handlePriceChange('price_promo', e.target.value)}
+                  disabled={!isEditMode && !formData.store_id}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="custom_price">Custom Price <span className="text-red-500">**</span></Label>
+                <Input
+                  id="custom_price"
+                  type="number"
+                  placeholder="e.g., 85000"
+                  value={formData.custom_price}
+                  onChange={e => handlePriceChange('custom_price', e.target.value)}
+                  disabled={!isEditMode && !formData.store_id}
+                />
+              </div>
+            </div>
+            <div className="text-xs text-muted-foreground space-y-1 mt-3">
+              <p><span className="text-red-500 inline-block w-3">*</span> Required</p>
+              <p><span className="text-red-500 inline-block w-3">**</span> Optional</p>
+            </div>
+          </div>
+          
+          {isEditMode && product && (
+            <div className="border-t pt-4">
+               <h4 className="text-sm font-medium mb-2">Other Prices (Wholesale)</h4>
+               <p className="text-sm text-muted-foreground mb-3">
+                 Add or view other price tiers (e.g., for Min. Qty 5, 10, etc.)
+               </p>
+              <TierPriceModal product={product} onTiersUpdate={onSave}>
+                <Button type="button" variant="outline" size="sm">
+                  <BadgePercent className="h-4 w-4 mr-2" />
+                  Manage Other Prices
+                </Button>
+              </TierPriceModal>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+      {/* --- AKHIR BAGIAN BARU --- */}
+
+
+      {/* ... (Bagian Image URLs dan Description tetap sama) ... */}
       <div className="space-y-2">
         <Label>Image URLs</Label>
         {imageUrls.map((url, index) => (
@@ -453,6 +458,7 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
         <Textarea id="description" value={formData.description} onChange={(e) => setFormData(p => ({ ...p, description: e.target.value }))} placeholder="Enter product description" rows={3} />
       </div>
 
+      {/* Footer Bawah */}
       <div className="flex justify-end space-x-4 pt-4">
         <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
         <Button type="submit">{product ? "Update Product" : "Add Product"}</Button>

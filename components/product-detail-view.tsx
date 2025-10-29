@@ -1,5 +1,3 @@
-// components/product-detail-view.tsx
-
 "use client"
 
 import { useState } from "react";
@@ -8,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import type { Product } from "@/types";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button"; // Import the Button component
+import { Button } from "@/components/ui/button"; 
 
 interface ProductDetailViewProps {
   product: Product;
@@ -26,12 +24,11 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
 
   const [mainImage, setMainImage] = useState(imageUrls[0] || "/placeholder.svg");
 
-  // Helper untuk format mata uang
   const formatCurrency = (value: number | string) => {
     const numberValue = typeof value === 'string' ? parseFloat(value) : value;
-    if (isNaN(numberValue)) {
-      return '-';
-    }
+    if (isNaN(numberValue)) { return '-'; }
+    // Jangan tampilkan 0
+    if (numberValue === 0) { return '-'; } 
     return `Rp ${numberValue.toLocaleString('id-ID')}`;
   };
 
@@ -39,6 +36,7 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
     <div className="grid md:grid-cols-2 gap-8 max-h-[80vh] overflow-y-auto p-1 pr-4">
       {/* Galeri Gambar */}
       <div>
+        {/* ... (Kode galeri gambar tetap sama) ... */}
         <div className="relative aspect-square w-full rounded-lg overflow-hidden border mb-4">
           <Image
             src={mainImage}
@@ -52,21 +50,12 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
           <div className="flex gap-2">
             {imageUrls.map((url, index) => (
               <Button
-                key={index}
-                variant="outline"
-                className={cn(
-                  "relative aspect-square w-16 h-16 rounded-md overflow-hidden p-0",
-                  mainImage === url ? "border-primary" : ""
-                )}
+                key={index} variant="outline"
+                className={cn("relative aspect-square w-16 h-16 rounded-md overflow-hidden p-0", mainImage === url ? "border-primary" : "")}
                 onClick={() => setMainImage(url)}
-                aria-label={`View image ${index + 1}`} // Accessibility fix
+                aria-label={`View image ${index + 1}`}
               >
-                <Image
-                  src={url}
-                  alt={`Thumbnail ${index + 1}`}
-                  fill
-                  className="object-cover"
-                />
+                <Image src={url} alt={`Thumbnail ${index + 1}`} fill className="object-cover" />
               </Button>
             ))}
           </div>
@@ -81,62 +70,84 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
           {product.short_name && <p className="text-lg text-muted-foreground">{product.short_name}</p>}
         </div>
 
+        {/* --- HAPUS CARD "BASE PRICE" DARI SINI --- */}
+        {/* Card yang menampilkan product.price dihilangkan */}
+
+        {/* Tampilkan Stok & VAT di sini saja */}
         <Card>
           <CardContent className="p-4 space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Harga</span>
-              <span className="text-2xl font-bold text-primary">
-                {formatCurrency(product.price)}
-              </span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground">Stok</span>
+              <span className="text-muted-foreground">Stock</span>
               <span className="font-semibold">{product.stock} {product.unit}</span>
             </div>
-            {/* --- TAMBAHAN: Menampilkan VAT/PPN --- */}
             {product.vat != null && product.vat > 0 && (
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">VAT</span>
                 <span className="font-semibold">{product.vat}%</span>
               </div>
             )}
-            {/* --- AKHIR TAMBAHAN --- */}
           </CardContent>
         </Card>
 
-        {/* --- TAMBAHAN: Menampilkan Harga Grosir (Tiers) --- */}
+
+        {/* --- DIPERBARUI: Tampilkan SEMUA Harga di sini --- */}
         {product.tiers && product.tiers.length > 0 && (
           <div>
-            <h3 className="font-semibold mb-2">Harga Grosir</h3>
+            <h3 className="font-semibold mb-2">Product Prices</h3>
             <Card>
               <CardContent className="p-4 space-y-3">
-                {product.tiers.map((tier, index) => (
-                  <div key={index} className="flex justify-between items-center text-sm gap-4">
-                    <span className="text-muted-foreground whitespace-nowrap">
-                      Min. {tier.min_quantity} {product.unit}
-                    </span>
-                    <div className="text-right flex-shrink-0">
-                      {/* Tampilkan harga asli jika ada harga promo */}
-                      {tier.price_promo && (
-                        <span className="text-xs text-muted-foreground line-through mr-2">
-                          {formatCurrency(tier.price)}
+                {product.tiers
+                  .sort((a, b) => a.min_quantity - b.min_quantity)
+                  .map((tier, index) => {
+                    
+                    // --- Logika Prioritas 3-Level (Custom > Promo > Price) ---
+                    const priceNormal = parseFloat(String(tier.price))
+                    const pricePromo = parseFloat(String(tier.price_promo))
+                    const priceCustom = parseFloat(String(tier.custom_price || "0"))
+
+                    let finalPrice = priceNormal
+                    let hasStrikethrough = false
+
+                    if (priceCustom > 0) {
+                      finalPrice = priceCustom
+                      hasStrikethrough = true
+                    } else if (pricePromo > 0) {
+                      finalPrice = pricePromo
+                      hasStrikethrough = true
+                    }
+                    // --- AKHIR LOGIKA ---
+
+                    // HAPUS 'if (tier.min_quantity === 1)'
+                    // Tampilkan semua tier
+                    
+                    return (
+                      <div key={index} className="flex justify-between items-center text-sm gap-4">
+                        <span className="text-muted-foreground whitespace-nowrap">
+                          {/* Tampilkan "Base" untuk min_q 1 */}
+                          {tier.min_quantity === 1 ? <strong>Base (Min 1 {product.unit})</strong> : `Min. ${tier.min_quantity} ${product.unit}`}
                         </span>
-                      )}
-                      <span className="font-semibold text-primary">
-                        {formatCurrency(tier.price_promo || tier.price)}
-                      </span>
-                    </div>
-                  </div>
-                ))}
+                        <div className="text-right flex-shrink-0">
+                          {hasStrikethrough && (
+                            <span className="text-xs text-muted-foreground line-through mr-2">
+                              {formatCurrency(priceNormal)}
+                            </span>
+                          )}
+                          <span className="font-semibold text-primary">
+                            {formatCurrency(finalPrice)}
+                          </span>
+                        </div>
+                      </div>
+                    )
+                  })}
               </CardContent>
             </Card>
           </div>
         )}
-        {/* --- AKHIR TAMBAHAN --- */}
+        {/* --- AKHIR PEMBARUAN --- */}
 
         {product.description && (
           <div>
-            <h3 className="font-semibold mb-2">Deskripsi</h3>
+            <h3 className="font-semibold mb-2">Description</h3>
             <p className="text-sm text-muted-foreground whitespace-pre-wrap">
               {product.description}
             </p>
@@ -144,16 +155,14 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
         )}
 
         <div>
-           <h3 className="font-semibold mb-2">Detail Lainnya</h3>
+           <h3 className="font-semibold mb-2">Other Details</h3>
            <div className="grid grid-cols-2 gap-2 text-sm">
               <span className="text-muted-foreground">SKU</span>
               <span className="font-mono">{product.sku}</span>
               <span className="text-muted-foreground">Barcode</span>
               <span className="font-mono">{product.barcode || '-'}</span>
-              {/* --- TAMBAHAN: Menampilkan Department Code --- */}
-              <span className="text-muted-foreground">Kode Dept.</span>
+              <span className="text-muted-foreground">Dept. Code</span>
               <span className="font-mono">{product.departmentCode || '-'}</span>
-              {/* --- AKHIR TAMBAHAN --- */}
               <span className="text-muted-foreground">Product ID</span>
               <span className="font-mono">{product.product_id}</span>
            </div>

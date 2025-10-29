@@ -1,41 +1,54 @@
-// types/index.ts
-
-export interface Tier {
-  min_quantity: number;
-  price: string;
-  price_promo?: string;
-}
-
 export interface User {
   name: string;
   store_code: string;
   role: 'ADMIN' | 'SALESMAN' | 'CASHIER';
 }
 
+export interface TierPrice {
+  min_quantity: number;
+  price: number | string; // Can be string from BE
+  price_promo: number | string; // Can be string from BE
+  custom_price?: number | string; // <-- ADD THIS (Highest Priority)
+}
+
 export interface Product {
-  product_id: string;
+  id: string;
+  product_id: number;
   sku: string;
   barcode: string;
   product_name: string;
-  slug: string;
-  url_image: string;
   short_name: string;
-  unit: string;
+  url_image: string;
   description: string;
-  category_id: string;
-  name_category: string;
   stock: number;
+  unit: string;
+  slug: string;
+  name_category: string;
+  category_id: number;
+  price: number; // Harga eceran (fallback)
+  vat: number;
+  departmentCode: string;
   store_id: string;
-  tiers: Tier[];
-  price: number;
-  vat?: number;
-  departmentCode?: string;
+  tiers?: TierPrice[]; // This is correct
 }
 
-export type ProductFormData = Omit<Product, 'product_id' | 'name_category' | 'price' | 'tiers'> & {
-  price: number;
+export interface ProductFormData {
+  product_name: string;
+  sku: string;
+  barcode?: string;
+  slug?: string;
+  url_image?: string;
+  short_name?: string;
+  unit: string;
+  description?: string;
+  category_id: string;
+  vat?: number;
+  departmentCode?: string;
+  stock: number;
+  price?: number;
   price_promo?: number;
-};
+  custom_price?: number;
+}
 
 export type BannerImages = string[];
 
