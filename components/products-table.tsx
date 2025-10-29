@@ -62,10 +62,14 @@ export function ProductsTable({ searchTerm, storeCode, refreshKey }: ProductsTab
 
       const response = await api.get<ProductApiResponse>('/products/all', params);
 
-      const productsWithPrice = response.items.map(p => ({
-        ...p,
-        price: p.tiers?.[0]?.price ? parseFloat(p.tiers[0].price) : 0,
-      }));
+      const productsWithPrice = response.items.map(p => {
+        const tierPrice = p.tiers?.[0]?.price;
+        const price = tierPrice != null && tierPrice !== "" ? parseFloat(String(tierPrice)) : 0;
+        return {
+          ...p,
+          price,
+        };
+      });
 
       setProducts(productsWithPrice);
       setPagination(response.pagination);
@@ -193,7 +197,7 @@ export function ProductsTable({ searchTerm, storeCode, refreshKey }: ProductsTab
                     <DropdownMenuContent align="end">
                       <DropdownMenuItem onClick={() => handleViewDetail(product)}><Eye className="h-4 w-4 mr-2" />View Detail</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleEdit(product)}><Edit className="h-4 w-4 mr-2" />Edit</DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(product.product_id)}><Trash2 className="h-4 w-4 mr-2" />Delete</DropdownMenuItem>
+                      <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(product.product_id.toString())}><Trash2 className="h-4 w-4 mr-2" />Delete</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
