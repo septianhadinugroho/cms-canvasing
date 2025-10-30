@@ -160,7 +160,7 @@ export function ProductsTable({ searchTerm, storeCode, refreshKey }: ProductsTab
               <TableHead>Barcode</TableHead>
               <TableHead>Category</TableHead>
               <TableHead>Stock</TableHead>
-              <TableHead>Price</TableHead>
+              {/* <TableHead>Price</TableHead> <-- DIHAPUS --> */}
               <TableHead className="w-12"></TableHead>
             </TableRow>
           </TableHeader>
@@ -188,7 +188,7 @@ export function ProductsTable({ searchTerm, storeCode, refreshKey }: ProductsTab
                 <TableCell className="font-mono">{product.barcode || '-'}</TableCell>
                 <TableCell>{product.name_category}</TableCell>
                 <TableCell>{product.stock} {product.unit}</TableCell>
-                <TableCell>Rp {(product.price ?? 0).toLocaleString('id-ID')}</TableCell>
+                {/* <TableCell>Rp {(product.price ?? 0).toLocaleString('id-ID')}</TableCell> <-- DIHAPUS --> */}
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>

@@ -23,6 +23,16 @@ import {
 import { cn } from "@/lib/utils"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+// --- IMPORT BARU ---
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+// --- AKHIR IMPORT BARU ---
 import { TierPriceModal } from "./tier-price-modal"
 
 // ... (Interface CategoryWithChildren dan flattenCategories tetap sama) ...
@@ -83,6 +93,15 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
   const [isCategoryPopoverOpen, setCategoryPopoverOpen] = useState(false)
   const [isStorePopoverOpen, setStorePopoverOpen] = useState(false)
   const { toast } = useToast()
+
+  // --- HELPER BARU ---
+  const formatCurrency = (value: number | string) => {
+    const num = Number(value);
+    if (isNaN(num) || num === 0) return "-";
+    return `Rp ${num.toLocaleString("id-ID")}`;
+  }
+  // --- AKHIR HELPER BARU ---
+
 
   // ... (useEffect fetchData tetap sama) ...
   useEffect(() => {
@@ -384,7 +403,7 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <h4 className="text-sm font-medium mb-2">Price for Min. Quantity: 1</h4>
+            <h4 className="text-sm font-medium mb-2">Price for Min. Quantity: 1 (Editable)</h4>
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-2">
                 <Label htmlFor="price">Price <span className="text-red-500">*</span></Label>
@@ -425,18 +444,50 @@ export function ProductForm({ product, onClose, onSave }: ProductFormProps) {
               <p><span className="text-red-500 inline-block w-3">**</span> Optional (Price will be used if 0)</p>
             </div>
           </div>
+
+          {/* --- BARU: Tampilkan Semua Harga (Read-Only) --- */}
+          {isEditMode && product?.tiers && product.tiers.length > 0 && (
+            <div className="border-t pt-4">
+              <h4 className="text-sm font-medium mb-2">All Price Tiers (Reference)</h4>
+              <div className="border rounded-md max-h-[150px] overflow-y-auto">
+                <Table>
+                  <TableHeader className="sticky top-0 bg-secondary">
+                    <TableRow>
+                      <TableHead>Min. Qty</TableHead>
+                      <TableHead>Price</TableHead>
+                      <TableHead>Promo</TableHead>
+                      <TableHead>Custom</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {product.tiers
+                      .sort((a, b) => a.min_quantity - b.min_quantity)
+                      .map((tier) => (
+                        <TableRow key={tier.min_quantity}>
+                          <TableCell>{tier.min_quantity}</TableCell>
+                          <TableCell>{formatCurrency(tier.price)}</TableCell>
+                          <TableCell>{formatCurrency(tier.price_promo)}</TableCell>
+                          <TableCell>{formatCurrency(tier.custom_price || 0)}</TableCell>
+                        </TableRow>
+                      ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+          )}
+          {/* --- AKHIR BAGIAN BARU --- */}
           
           {/* Tombol Modal HANYA muncul saat EDIT MODE */}
           {isEditMode && product && (
             <div className="border-t pt-4">
-               <h4 className="text-sm font-medium mb-2">Other Prices (Wholesale)</h4>
+               <h4 className="text-sm font-medium mb-2">Manage Other Prices (Wholesale)</h4>
                <p className="text-sm text-muted-foreground mb-3">
-                 Add or view other price tiers (e.g., for Min. Qty 5, 10, etc.)
+                 Add, edit, or delete prices for other quantities (e.g., Min. Qty 5, 10, etc.)
                </p>
               <TierPriceModal product={product} onTiersUpdate={onSave}>
                 <Button type="button" variant="outline" size="sm">
                   <BadgePercent className="h-4 w-4 mr-2" />
-                  Manage Other Prices
+                  Add / Edit Other Prices
                 </Button>
               </TierPriceModal>
             </div>

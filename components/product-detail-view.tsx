@@ -162,6 +162,9 @@ export function ProductDetailView({ product }: ProductDetailViewProps) {
               <span className="font-mono">{product.departmentCode || '-'}</span>
               <span className="text-muted-foreground">Product ID</span>
               <span className="font-mono">{product.product_id}</span>
+              {/* --- BARIS BARU --- */}
+              <span className="text-muted-foreground">Store ID</span>
+              <span className="font-mono">{product.store_id}</span>
            </div>
         </div>
       </div>
