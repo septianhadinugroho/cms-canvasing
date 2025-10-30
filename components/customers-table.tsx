@@ -29,7 +29,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { CustomerDetailView } from "./customer-detail-view";
-import { Eye } from "lucide-react";
+// Tambahkan UserCheck, UserX, dan Loader2
+import { Eye, UserCheck, UserX, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { api, updateCustomerStatus } from "@/lib/api";
 import type { Customer } from "@/types";
@@ -148,26 +149,31 @@ export function CustomersTable() {
                         variant="ghost"
                         size="icon"
                         onClick={() => handleViewDetail(customer)}
+                        aria-label={`View detail for ${customer.customer_name}`}
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
                       <AlertDialog>
+                        {/* Ganti Button text menjadi Button icon */}
                         <AlertDialogTrigger asChild>
                           <Button
-                            variant={isActive ? "destructive" : "default"}
-                            size="sm"
+                            variant="ghost"
+                            size="icon"
                             disabled={isUpdating[customer.id]}
+                            aria-label={isActive ? `Deactivate ${customer.customer_name}` : `Activate ${customer.customer_name}`}
                             className={
-                              !isActive
-                                ? "bg-green-500 hover:bg-green-600"
-                                : ""
+                              isActive
+                                ? "text-destructive hover:text-destructive"
+                                : "text-green-500 hover:text-green-500"
                             }
                           >
-                            {isUpdating[customer.id]
-                              ? "..."
-                              : isActive
-                              ? "Deactivate"
-                              : "Activate"}
+                            {isUpdating[customer.id] ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : isActive ? (
+                              <UserX className="h-4 w-4" />
+                            ) : (
+                              <UserCheck className="h-4 w-4" />
+                            )}
                           </Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>

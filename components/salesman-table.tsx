@@ -5,10 +5,20 @@ import { useState, useEffect, useCallback } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog" // Import AlertDialog
 import { SalesmanForm } from "./salesman-form"
 import { SalesmanDetailView } from "./salesman-detail-view"
-import { Edit, Trash2, MoreHorizontal, Eye } from "lucide-react"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Edit, Trash2, Eye } from "lucide-react" // Hapus MoreHorizontal
 import { useToast } from "@/hooks/use-toast"
 import { api } from "@/lib/api"
 import type { Salesman } from "@/types"
@@ -53,15 +63,14 @@ export function SalesmanTable({ refreshKey, onRefresh }: SalesmanTableProps) {
     setIsEditDialogOpen(true);
   }
 
-  const handleDelete = async (salesmanId: string) => {
-    if (window.confirm(`Are you sure you want to delete this salesman?`)) {
-        try {
-            await api.delete(`/salesman/${salesmanId}`);
-            toast({ title: "Success!", description: `Salesman successfully deleted.` });
-            onRefresh();
-        } catch(error: any) {
-            toast({ title: "Failed", description: error.message, variant: "destructive"});
-        }
+  // Ganti nama handleDelete menjadi performDelete dan hapus window.confirm
+  const performDelete = async (salesmanId: string) => {
+    try {
+        await api.delete(`/salesman/${salesmanId}`);
+        toast({ title: "Success!", description: `Salesman successfully deleted.` });
+        onRefresh();
+    } catch(error: any) {
+        toast({ title: "Failed", description: error.message, variant: "destructive"});
     }
   }
 
@@ -76,7 +85,8 @@ export function SalesmanTable({ refreshKey, onRefresh }: SalesmanTableProps) {
               <TableHead>Name</TableHead>
               <TableHead>Username</TableHead>
               <TableHead>Store</TableHead>
-              <TableHead className="w-12"></TableHead>
+              {/* Ganti TableHead untuk kolom Actions */}
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -85,17 +95,53 @@ export function SalesmanTable({ refreshKey, onRefresh }: SalesmanTableProps) {
                 <TableCell className="font-medium">{salesman.name}</TableCell>
                 <TableCell>{salesman.username}</TableCell>
                 <TableCell>{salesman.store_name}</TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0"><MoreHorizontal className="h-4 w-4" /></Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleViewDetail(salesman)}><Eye className="h-4 w-4 mr-2" />View Detail</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleEdit(salesman)}><Edit className="h-4 w-4 mr-2" />Edit</DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(salesman.id)}><Trash2 className="h-4 w-4 mr-2" />Delete</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                {/* Ganti DropdownMenu dengan Button langsung */}
+                <TableCell className="text-right">
+                  <div className="flex items-center justify-end space-x-2">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => handleViewDetail(salesman)}
+                      aria-label={`View detail for ${salesman.name}`}
+                    >
+                      <Eye className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => handleEdit(salesman)}
+                      aria-label={`Edit ${salesman.name}`}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    {/* Tambahkan AlertDialog untuk Delete */}
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="text-destructive"
+                          aria-label={`Delete ${salesman.name}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action will delete {salesman.name}. This cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => performDelete(salesman.id)}>
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
